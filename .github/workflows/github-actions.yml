@@ -1,5 +1,6 @@
-on: 
-  push
+name: API workflow
+
+on: [push, pull_request]
 
 jobs:
   test:
