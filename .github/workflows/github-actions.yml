@@ -19,10 +19,14 @@ jobs:
         run: npm install
 
       - name: Run tests
-        run: npx jest --coverage
+        run: npx test -- --coverage
 
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: VitaliiBaryliuk/nest-cicd
+          files: "coverage/lcov.info"         
+          flags: unittests      
+          fail_ci_if_error: true
+          verbose: true
