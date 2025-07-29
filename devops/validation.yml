@@ -1,0 +1,48 @@
+name: 'Validate nestjs-cicd'
+
+trigger:
+  batch: true
+  pr:
+    autoCancel: false
+    branches:
+      include:
+      - develop
+    paths:
+      exclude:
+      - README.md
+
+stages:
+- stage: dev_stage_validate
+  displayName: 'build deploy infastructure'
+  jobs:
+    - deployment: "dev_validate_job"
+      pool:
+        vmImage: $(vmImageUbuntu)
+      environment: dev_validation
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - checkout: self
+            - checkout: templates
+              clean: true
+              fetchDepth: 5
+
+            - template: application/nodejs/nodejs-install.yml@templates
+              parameters:
+                nodeJsVersion: $(nodeJsVersion)
+            - template: application/nodejs/nodejs-npm-registry-config.yml@templates
+              parameters: 
+                GitHubToken: $(GatewayDatasourceRestPat)
+            - script: npm ci
+              workingDirectory: $(System.DefaultWorkingDirectory)/gateway-service
+              displayName: '🍳 Install Dependencies'
+            - script: npm run lint
+              workingDirectory: $(System.DefaultWorkingDirectory)/gateway-service
+              displayName: '🧐 Lint'
+            - script: npm run test
+              workingDirectory: $(System.DefaultWorkingDirectory)/gateway-service
+              displayName: '🧪 Test'
+            - script: npm run build
+              workingDirectory: $(System.DefaultWorkingDirectory)/gateway-service
+              displayName: '🏗️ Build'
