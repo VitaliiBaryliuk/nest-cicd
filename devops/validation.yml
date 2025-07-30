@@ -25,10 +25,11 @@ resources:
     name: VitaliiBaryliuk/nest-cicd
     ref: refs/heads/develop
     endpoint: VitaliiBaryliuk
+    allowScriptsAuthAccessOption: true
 
 stages:
 - stage: dev_stage_validate
-  displayName: 'build deploy infrastructure'
+  displayName: 'Run Validation Steps'
   jobs:
     - deployment: "dev_validate_job"
       pool:
