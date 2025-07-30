@@ -36,7 +36,7 @@ stages:
   jobs:
     - deployment: "dev_validate_job"
       pool:
-        vmImage: $(vmImageUbuntu)
+        vmImage: 'windows-latest'
       environment: dev_validation
       strategy:
         runOnce:
