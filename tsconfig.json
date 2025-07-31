@@ -20,7 +20,8 @@
   },
   "include": [
     "src",
-    ".eslintrc.js",
+    "test",
+    ".eslint.config.js",
     "commitlint.config.js"
   ]
 }
