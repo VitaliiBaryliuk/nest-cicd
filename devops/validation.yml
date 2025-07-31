@@ -36,7 +36,7 @@ stages:
   jobs:
     - deployment: "dev_validate_job"
       pool:
-        vmImage: 'windows-latest'
+        name: 'SelfHostedPool'
       environment: dev_validation
       strategy:
         runOnce:
