@@ -48,14 +48,14 @@ stages:
               fetchDepth: 5
 
             - script: npm ci
-              workingDirectory: $(System.DefaultWorkingDirectory)/gateway-service
+              workingDirectory: $(System.DefaultWorkingDirectory)/nest-cicd
               displayName: '🍳 Install Dependencies'
             - script: npm run lint
-              workingDirectory: $(System.DefaultWorkingDirectory)/gateway-service
+              workingDirectory: $(System.DefaultWorkingDirectory)/nest-cicd
               displayName: '🧐 Lint'
             - script: npm run test
-              workingDirectory: $(System.DefaultWorkingDirectory)/gateway-service
+              workingDirectory: $(System.DefaultWorkingDirectory)/nest-cicd
               displayName: '🧪 Test'
             - script: npm run build
-              workingDirectory: $(System.DefaultWorkingDirectory)/gateway-service
+              workingDirectory: $(System.DefaultWorkingDirectory)/nest-cicd
               displayName: '🏗️ Build'
