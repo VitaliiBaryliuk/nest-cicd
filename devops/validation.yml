@@ -4,19 +4,19 @@ trigger:
   batch: true
   branches:
     include:
-    - develop
+      - develop
   paths:
     exclude:
-    - README.md
+      - README.md
 
 pr:
   autoCancel: false
   branches:
     include:
-    - develop
+      - develop
   paths:
     exclude:
-    - README.md
+      - README.md
 
 resources:
   repositories:
