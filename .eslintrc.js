@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: 'tsconfig.json',
@@ -17,7 +17,7 @@ export default {
   },
   ignorePatterns: [
     'eslint.config.mjs',
-    'commitlint.config.js'
+    'commitlint.config.js',
   ],
   rules: {
     '@typescript-eslint/interface-name-prefix': 'off',
@@ -30,10 +30,10 @@ export default {
   },
   overrides: [
     {
-      'files': ['test-new/**/*.mock.ts', 'e2e/**/*.mock.ts'],
-      'rules': {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+      files: ['test-new/**/*.mock.ts', 'e2e/**/*.mock.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off',
+      },
+    },
+  ],
 };

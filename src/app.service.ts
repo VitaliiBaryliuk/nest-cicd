@@ -7,6 +7,7 @@ export class AppService {
   }
 
   getHola(): string {
-    return 'Hola Hola Hola World!';
+    return 'Hola World!';
   }
 }
+
