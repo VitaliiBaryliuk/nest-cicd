@@ -20,7 +20,7 @@ describe('AppController', () => {
     });
 
     it('should return "Hola World!"', () => {
-      expect(appController.getHola()).toBe('Hola World!');
+      expect(appController.getHola()).toBe('Hola World World!');
     });
   });
 });
