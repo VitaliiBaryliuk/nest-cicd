@@ -1,14 +1,5 @@
 name: 'Validate nestjs-cicd'
 
-trigger:
-  batch: true
-  branches:
-    include:
-      - develop
-  paths:
-    exclude:
-      - README.md
-
 pr:
   autoCancel: false
   branches:
