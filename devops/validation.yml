@@ -35,19 +35,26 @@ stages:
         runOnce:
           deploy:
             steps:
-            - checkout: self
-              clean: true
-              fetchDepth: 5
+              - checkout: self
+                path: $(System.DefaultWorkingDirectory)/self-repo
+              - checkout: templates
+                path: $(System.DefaultWorkingDirectory)/templates-repo
 
-            - script: npm ci
-              workingDirectory: $(System.DefaultWorkingDirectory)
-              displayName: '🍳 Install Dependencies'
-            - script: npm run lint
-              workingDirectory: $(System.DefaultWorkingDirectory)
-              displayName: '🧐 Lint'
-            - script: npm run test
-              workingDirectory: $(System.DefaultWorkingDirectory)
-              displayName: '🧪 Test'
-            - script: npm run build
-              workingDirectory: $(System.DefaultWorkingDirectory)
-              displayName: '🏗️ Build'
+              - script: dir $(System.DefaultWorkingDirectory)/self-repo /s
+                displayName: "Debug Workspace Contents (Self Repo)"
+
+              - script: npm ci
+                workingDirectory: $(System.DefaultWorkingDirectory)/self-repo
+                displayName: "🍳 Install Dependencies"
+
+              - script: npm run lint
+                workingDirectory: $(System.DefaultWorkingDirectory)/self-repo
+                displayName: "🧐 Lint"
+
+              - script: npm run test
+                workingDirectory: $(System.DefaultWorkingDirectory)/self-repo
+                displayName: "🧪 Test"
+
+              - script: npm run build
+                workingDirectory: $(System.DefaultWorkingDirectory)/self-repo
+                displayName: "🏗️ Build"
