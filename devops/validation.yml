@@ -26,6 +26,11 @@ stages:
         runOnce:
           deploy:
             steps:
+              - script: |
+                  echo "SourceBranch: $(Build.SourceBranch)"
+                  echo "Reason: $(Build.Reason)"
+                  echo "Environment Setup Correctly"
+                displayName: "Run Debug Test"
               - checkout: self
               - script: npm ci
                 workingDirectory: $(System.DefaultWorkingDirectory)
