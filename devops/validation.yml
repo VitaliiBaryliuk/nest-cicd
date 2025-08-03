@@ -11,15 +11,6 @@ pr:
     exclude:
       - README.md
 
-resources:
-  repositories:
-  - repository: templates
-    type: github
-    name: VitaliiBaryliuk/nest-cicd
-    ref: refs/heads/develop
-    endpoint: VitaliiBaryliuk
-    allowScriptsAuthAccessOption: true
-
 variables:
   System.Debug: true    
 
@@ -36,17 +27,16 @@ stages:
           deploy:
             steps:
               - checkout: self
-              - checkout: templates
 
               - script: npm ci
-                workingDirectory: $(System.DefaultWorkingDirectory)/nest-cicd
+                workingDirectory: $(System.DefaultWorkingDirectory)
                 displayName: '🍳 Install Dependencies'
               - script: npm run lint
-                workingDirectory: $(System.DefaultWorkingDirectory)/nest-cicd
+                workingDirectory: $(System.DefaultWorkingDirectory)
                 displayName: '🧐 Lint'
               - script: npm run test
-                workingDirectory: $(System.DefaultWorkingDirectory)/nest-cicd
+                workingDirectory: $(System.DefaultWorkingDirectory)
                 displayName: '🧪 Test'
               - script: npm run build
-                workingDirectory: $(System.DefaultWorkingDirectory)/nest-cicd
+                workingDirectory: $(System.DefaultWorkingDirectory)
                 displayName: '🏗️ Build'
