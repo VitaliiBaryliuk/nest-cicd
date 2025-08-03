@@ -1,6 +1,12 @@
 name: 'Validate nestjs-cicd'
 
-trigger: []
+trigger:
+  branches:
+    include:
+      - feat/*
+    exclude:
+      - main
+      - develop
 
 pr:
   autoCancel: true
