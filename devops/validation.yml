@@ -36,25 +36,19 @@ stages:
           deploy:
             steps:
               - checkout: self
-                path: $(System.DefaultWorkingDirectory)/self-repo
+                path: $(System.DefaultWorkingDirectory)
               - checkout: templates
-                path: $(System.DefaultWorkingDirectory)/templates-repo
-
-              - script: dir $(System.DefaultWorkingDirectory)/self-repo /s
-                displayName: "Debug Workspace Contents (Self Repo)"
+                path: $(System.DefaultWorkingDirectory)/nest-cicd
 
               - script: npm ci
-                workingDirectory: $(System.DefaultWorkingDirectory)\self-repo
-                displayName: "🍳 Install Dependencies"
-
+                workingDirectory: $(System.DefaultWorkingDirectory)
+                displayName: '🍳 Install Dependencies'
               - script: npm run lint
-                workingDirectory: $(System.DefaultWorkingDirectory)\self-repo
-                displayName: "🧐 Lint"
-
+                workingDirectory: $(System.DefaultWorkingDirectory)
+                displayName: '🧐 Lint'
               - script: npm run test
-                workingDirectory: $(System.DefaultWorkingDirectory)\self-repo
-                displayName: "🧪 Test"
-
+                workingDirectory: $(System.DefaultWorkingDirectory)
+                displayName: '🧪 Test'
               - script: npm run build
-                workingDirectory: $(System.DefaultWorkingDirectory)\self-repo
-                displayName: "🏗️ Build"
+                workingDirectory: $(System.DefaultWorkingDirectory)
+                displayName: '🏗️ Build'
