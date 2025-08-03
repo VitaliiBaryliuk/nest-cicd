@@ -27,6 +27,7 @@ stages:
           deploy:
             steps:
               - checkout: self
+
               - script: npm ci
                 workingDirectory: $(System.DefaultWorkingDirectory)
                 displayName: '🍳 Install Dependencies'
