@@ -1,0 +1,5 @@
+resource_group_name = "nestjs-cicd-prod-rg"
+azure_location      = "westus2"
+blue_app_name       = "blue-nestjs-cicd-app"
+green_app_name      = "green-nestjs-cicd-app"
+dns_zone_name       = "yourdomain.com"

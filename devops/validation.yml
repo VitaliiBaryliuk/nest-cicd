@@ -15,10 +15,7 @@ pr:
       - 'develop'
   paths:
     exclude:
-      - README.md
-
-variables:
-  System.Debug: true    
+      - README.md   
 
 stages:
 - stage: dev_stage_validate
