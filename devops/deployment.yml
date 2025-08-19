@@ -9,8 +9,8 @@ stages:
   displayName: 'Deploy and Test Initial App Environment'
   jobs:
     - job: deploy_initial_job
-      environment: 'nest-cicd-prod'
       displayName: 'Deploy and Test Blue or Green'
+      environment: 'nest-cicd-prod'
       pool:
         name: 'SelfHostedPool'  # Use your self-hosted pool
       steps:
@@ -61,8 +61,8 @@ stages:
   dependsOn: deploy_initial
   jobs:
     - job: approval_job
-      environment: 'nest-cicd-prod'
       displayName: 'Approve Traffic Direction or Rollback'
+      environment: 'nest-cicd-prod'
       pool:
         name: 'SelfHostedPool'
       steps:
@@ -100,8 +100,8 @@ stages:
   dependsOn: approval_stage
   jobs:
     - job: finalize_job
-      environment: 'nest-cicd-prod'
       displayName: 'Synchronize Both Environments or Confirm No Action'
+      environment: 'nest-cicd-prod'
       pool:
         name: 'SelfHostedPool'
       steps:
