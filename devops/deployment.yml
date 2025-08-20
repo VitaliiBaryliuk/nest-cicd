@@ -1,142 +1,110 @@
 name: 'nestjs-blue-green-cicd'
 
 variables:
-  System.Debug: true    
+  System.Debug: true
 
 stages:
 # Stage 1: Deploy and Test Initial App Environment
 - stage: deploy_initial
   displayName: 'Deploy and Test Initial App Environment'
   jobs:
-    - deployment: deploy_initial_job  # Deployment job type
-      displayName: 'Deploy and Test Blue or Green'
+    - deployment: deploy_initial_job
+      displayName: 'Deploy to Inactive Environment'
       environment: 'nest-cicd-prod'  # Ensure this environment exists in Azure DevOps
       pool:
-        name: 'SelfHostedPool'  # Replace with your pool
+        name: 'SelfHostedPool'  # For the deployment job
       strategy:
-        runOnce:  # Required for deployment jobs; runs once per deployment
+        runOnce:
           deploy:
             steps:
-              # Step 1: Determine Initial Deployment Environment
               - script: |
+                  echo "Determining inactive environment..."
                   if [ "$(terraform output active_app_environment)" = "blue" ]; then
-                    echo "Traffic is routed to Blue. Deploying to Green."
+                    echo "Current live environment: Blue"
                     echo "##vso[task.setvariable variable=inactiveEnvironment]green"
                     echo "##vso[task.setvariable variable=activeEnvironment]blue"
                   else
-                    echo "Traffic is routed to Green. Deploying to Blue."
+                    echo "Current live environment: Green"
                     echo "##vso[task.setvariable variable=inactiveEnvironment]blue"
                     echo "##vso[task.setvariable variable=activeEnvironment]green"
                   fi
-                displayName: 'Determine Initial Deployment Environment'
+                displayName: 'Set Active/Inactive Environments'
 
-              # Step 2: Checkout Repository
-              - checkout: self
-
-              # Step 3: Install Dependencies and Build Application (Node.js v20)
               - script: |
-                  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-                  sudo apt-get install -y nodejs
-                  node -v # Display Node.js version to confirm installation
-                  npm ci
-                  npm run build
-                displayName: 'Install Dependencies and Build Application'
-                workingDirectory: $(System.DefaultWorkingDirectory)
+                  terraform init
+                  terraform plan -var="active_app=$(inactiveEnvironment)" -out=tfplan
+                  terraform apply -auto-approve tfplan
+                displayName: 'Provision Infrastructure'
 
-              # Step 4: Deploy Application to Inactive App Service
               - task: AzureRmWebAppDeployment@4
-                displayName: 'Deploy to $(inactiveEnvironment) App Service'
+                displayName: 'Deploy Application to $(inactiveEnvironment)'
                 inputs:
-                  azureSubscription: '703d10f6-9dab-4401-ac0f-cade6c18279e'  # Your Azure service connection ID
+                  azureSubscription: 'AzureServicesConnection'  # Replace with your existing service connection name
                   appType: webApp
                   WebAppName: "$(inactiveEnvironment)-nestjs-app"
                   packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
-              # Step 5: Confirm Test Environment
-              - script: |
-                  echo "Testing the newly deployed environment."
-                  echo "Access the application at: https://$(inactiveEnvironment)-nestjs-app.azurewebsites.net"
-                displayName: 'Notify Testing Status'
-
-# Stage 2: Approval - Switch Traffic or Rollback
+# Stage 2: Switch Traffic Approval
 - stage: approval_stage
   displayName: 'Approval: Switch Traffic or Rollback'
   dependsOn: deploy_initial
   jobs:
-    - deployment: approval_job  # Deployment job type
-      displayName: 'Approve Traffic Switch or Rollback'
-      environment: 'nest-cicd-prod'  # Tie approval to the environment
-      pool:
-        name: 'SelfHostedPool'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              # Step 1: Manual Approval for Traffic Switch or Rollback
-              - task: ManualValidation@0
-                inputs:
-                  instructions: |
-                    New Environment: $(inactiveEnvironment)
-                    Current Environment: $(activeEnvironment)
-                    1. Approve to switch traffic to $(inactiveEnvironment).
-                    2. Reject to rollback traffic to $(activeEnvironment).
-                  title: 'Traffic Approval or Rollback'
+    # Step 1: Manual Validation (Server Job)
+    - job: approval_job  # Server job for manual validation
+      displayName: 'Manual Approval for Traffic Switch'
+      pool: server  # Server job does not use an agent
+      steps:
+        - task: ManualValidation@0
+          timeoutInMinutes: 1440
+          inputs:
+            instructions: |
+              Current live environment: $(activeEnvironment)
+              New deployment: $(inactiveEnvironment)
+              Approve to **switch traffic to $(inactiveEnvironment)**.
+              Reject to **keep traffic on $(activeEnvironment)** (rollback).
+            notifyUsers: ''
+          displayName: 'Approval Step for Traffic Switching'
 
-              # Step 2: Conditional Traffic Update Based on Manual Approval
-              - script: |
-                  if [ "$(approval.status)" = "Approved" ]; then
-                    echo "Switching traffic to $(inactiveEnvironment)."
-                    cd infra
-                    terraform plan -var="active_app=$(inactiveEnvironment)" -out=tfplan
-                    terraform apply tfplan
-                  else
-                    echo "Rolling back traffic to $(activeEnvironment)."
-                    cd infra
-                    terraform plan -var="active_app=$(activeEnvironment)" -out=tfplan
-                    terraform apply tfplan
-                  fi
-                displayName: 'Apply Traffic Configuration Change'
+    # Step 2: Execute Traffic Updates Based on Approval (Agent Job)
+    - job: execute_traffic_job
+      displayName: 'Execute Traffic Switch or Rollback'
+      dependsOn: approval_job  # Depends on ManualValidation outcome
+      pool: 'SelfHostedPool'  # Replace with your agent pool for Terraform scripts
+      steps:
+        # Apply Traffic Update if Approved
+        - script: |
+            echo "Switching traffic to $(inactiveEnvironment)..."
+            terraform plan -var="active_app=$(inactiveEnvironment)" -out=tfplan
+            terraform apply -auto-approve tfplan
+          displayName: 'Apply Traffic Updates'
+          condition: succeeded(dependencies.approval_job)  # Run if ManualValidation was approved
 
-# Stage 3: Synchronization or Confirm Rollback
+        # Rollback Decision if Rejected
+        - script: |
+            echo "Rollback triggered: Retaining traffic on $(activeEnvironment)..."
+          displayName: 'Rollback Traffic Decision'
+          condition: failed(dependencies.approval_job)  # Run if ManualValidation was rejected
+
+
+# Stage 3: Finalize Deployment or Confirm Rollback
 - stage: finalize_stage
   displayName: 'Finalize Deployment or Confirm Rollback'
   dependsOn: approval_stage
   jobs:
-    - deployment: finalize_job  # Deployment job type for finalizing
-      displayName: 'Deploy Final Sync or Confirm Rollback'
+    - deployment: finalize_job
+      displayName: 'Sync Environments or Confirm Rollback'
       environment: 'nest-cicd-prod'
-      pool:
-        name: 'SelfHostedPool'
       strategy:
         runOnce:
           deploy:
             steps:
-              # Step 1: Synchronize Environments If Needed
               - script: |
-                  if [ "$(approval.status)" = "Approved" ]; then
-                    echo "Synchronizing environments."
-                    echo "##vso[task.setvariable variable=finalSyncAction]deploy"
+                  echo "Finalizing deployment based on approval."
+                  if [ "$(approval.status)" = "approved" ]; then
+                    echo "Syncing inactive environment $(activeEnvironment) with new application version."
+                    terraform plan -var="active_app=$(activeEnvironment)" -out=tfplan
+                    terraform apply -auto-approve tfplan
                   else
-                    echo "No synchronization required."
-                    echo "##vso[task.setvariable variable=finalSyncAction]none"
+                    echo "Rollback confirmed. No additional changes to environments."
                   fi
-                displayName: 'Decide Final Action'
-
-              # Step 2: Deploy to Stale Environment (Sync If Needed)
-              - task: AzureRmWebAppDeployment@4
-                displayName: 'Sync Update to $(activeEnvironment)'
-                condition: eq(variables['finalSyncAction'], 'deploy')
-                inputs:
-                  azureSubscription: '703d10f6-9dab-4401-ac0f-cade6c18279e'
-                  appType: webApp
-                  WebAppName: "$(activeEnvironment)-nestjs-app"
-                  packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
-
-              # Step 3: Completion Notice
-              - script: |
-                  if [ "$(finalSyncAction)" = "deploy" ]; then
-                    echo "Blue and Green environments synchronized."
-                  else
-                    echo "Rollback confirmed. No changes made to inactive environment."
-                  fi
-                displayName: 'Complete Finalization'
+                displayName: 'Finalize Sync or Rollback'
