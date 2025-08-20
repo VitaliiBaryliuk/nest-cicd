@@ -34,6 +34,7 @@ stages:
                       echo "##vso[task.setvariable variable=inactiveEnvironment]blue"
                       echo "##vso[task.setvariable variable=activeEnvironment]green"
                   fi
+                failOnStderr: false  
                 displayName: 'Set Active/Inactive Environments'
 
               - script: |
