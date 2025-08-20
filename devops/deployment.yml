@@ -18,6 +18,7 @@ stages:
           deploy:
             steps:
               - script: |
+                  cd $(System.DefaultWorkingDirectory)/devops/terraform
                   echo "Determining inactive environment..."
                   if [ "$(terraform output active_app_environment)" = "blue" ]; then
                     echo "Current live environment: Blue"
