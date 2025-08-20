@@ -17,6 +17,7 @@ stages:
         runOnce:
           deploy:
             steps:
+              - checkout: self
               - script: |
                   cd $(System.DefaultWorkingDirectory)/devops/terraform
                   echo "Determining inactive environment..."
