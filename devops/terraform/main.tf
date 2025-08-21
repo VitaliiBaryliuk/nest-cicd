@@ -76,7 +76,7 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
 }
 
 # Traffic Manager Endpoints
-resource "azurerm_traffic_manager_profile_endpoint" "blue_endpoint" {
+resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
   name                    = "blue-endpoint"
   traffic_manager_profile_id = azurerm_traffic_manager_profile.test_profile.id
   resource_group_name     = azurerm_resource_group.rg.name
@@ -85,7 +85,7 @@ resource "azurerm_traffic_manager_profile_endpoint" "blue_endpoint" {
   priority                = (var.active_app_environment == "blue" ? 1 : 2)
 }
 
-resource "azurerm_traffic_manager_profile_endpoint" "green_endpoint" {
+resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
   name                    = "green-endpoint"
   traffic_manager_profile_id = azurerm_traffic_manager_profile.test_profile.id
   resource_group_name     = azurerm_resource_group.rg.name
@@ -96,11 +96,11 @@ resource "azurerm_traffic_manager_profile_endpoint" "green_endpoint" {
 
 # Output Variables
 output "blue_app_domain" {
-  value = azurerm_linux_web_app.blue_app.default_host_name
+  value = azurerm_linux_web_app.blue_app.default_hostname
 }
 
 output "green_app_domain" {
-  value = azurerm_linux_web_app.green_app.default_host_name
+  value = azurerm_linux_web_app.green_app.default_hostname
 }
 
 output "active_app_environment" {
