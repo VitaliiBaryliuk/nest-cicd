@@ -12,7 +12,7 @@ stages:
       displayName: 'Deploy to Inactive Environment'
       environment: 'nest-cicd-prod'  # Ensure this environment exists in Azure DevOps
       pool:
-        name: 'SelfHostedPool'  # Use your self-hosted agent pool
+        name: 'SelfHostedPool'  # Use your self-hosted Windows agent pool
       strategy:
         runOnce:
           deploy:
@@ -20,56 +20,45 @@ stages:
               # Step 1: Checkout Repository
               - checkout: self
 
-              # Step 2: Debug Working Directory (Verify Files Exist)
-              - task: Bash@3
-                inputs:
-                  targetType: inline
-                  script: |
-                    echo "System Default Working Directory: $(System.DefaultWorkingDirectory)"
-                    ls $(System.DefaultWorkingDirectory)
-                    ls $(System.DefaultWorkingDirectory)/devops/terraform
+              # Step 2: Debug Working Directory (Windows Compatible)
+              - script: |
+                  echo Debugging working directory
+                  echo System Default Working Directory: %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
                 displayName: 'Debug Working Directory'
 
               # Step 3: Determine Active/Inactive Environments
-              - task: Bash@3
-                inputs:
-                  targetType: inline
-                  script: |
-                    echo "Determining inactive environment..."
-                    cd $(System.DefaultWorkingDirectory)/devops/terraform || exit 1
-                    active_env=$(terraform output active_app_environment || echo "unknown")
+              - script: |
+                  echo Determining inactive environment...
+                  cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
+                  for /f "delims=" %%a in ('terraform output active_app_environment') do set active_env=%%a
 
-                    if [ "$active_env" = "blue" ]; then
-                        echo "Current live environment: Blue"
-                        echo "##vso[task.setvariable variable=inactiveEnvironment]green"
-                        echo "##vso[task.setvariable variable=activeEnvironment]blue"
-                    elif [ "$active_env" = "green" ]; then
-                        echo "Current live environment: Green"
-                        echo "##vso[task.setvariable variable=inactiveEnvironment]blue"
-                        echo "##vso[task.setvariable variable=activeEnvironment]green"
-                    else
-                        echo "Error: Unable to determine environment."
-                        exit 1
-                    fi
+                  if "%active_env%"=="blue" (
+                      echo Current live environment: Blue
+                      echo ##vso[task.setvariable variable=inactiveEnvironment]green
+                      echo ##vso[task.setvariable variable=activeEnvironment]blue
+                  ) else (
+                      echo Current live environment: Green
+                      echo ##vso[task.setvariable variable=inactiveEnvironment]blue
+                      echo ##vso[task.setvariable variable=activeEnvironment]green
+                  )
                 displayName: 'Set Active/Inactive Environments'
 
               # Step 4: Provision Infrastructure Using Terraform
-              - task: Bash@3
-                inputs:
-                  targetType: inline
-                  script: |
-                    echo "Provisioning infrastructure using Terraform..."
-                    cd $(System.DefaultWorkingDirectory)/devops/terraform || exit 1
-                    terraform init
-                    terraform plan -var="active_app=$(inactiveEnvironment)" -out=tfplan
-                    terraform apply -auto-approve tfplan
+              - script: |
+                  echo Provisioning infrastructure using Terraform...
+                  cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
+                  terraform init
+                  terraform plan -var="active_app=%inactiveEnvironment%" -out=tfplan
+                  terraform apply -auto-approve tfplan
                 displayName: 'Provision Infrastructure'
 
               # Step 5: Deploy Application to Inactive Environment
               - task: AzureRmWebAppDeployment@4
                 displayName: 'Deploy Application to $(inactiveEnvironment)'
                 inputs:
-                  azureSubscription: 'AzureServicesConnection'  # Replace with your existing Azure DevOps service connection
+                  azureSubscription: 'AzureServicesConnection'  # Replace with Azure DevOps service connection
                   appType: webApp
                   WebAppName: "$(inactiveEnvironment)-nestjs-app"
                   packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
