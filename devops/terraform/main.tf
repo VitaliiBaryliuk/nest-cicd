@@ -13,20 +13,14 @@ resource "azurerm_service_plan" "blue_plan" {
   name                = "blue-service-plan"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  sku {
-    tier = "Free"
-    size = "F1"
-  }
+  sku_name            = "F1" # Free Tier Plan
 }
 
 resource "azurerm_service_plan" "green_plan" {
   name                = "green-service-plan"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  sku {
-    tier = "Free"
-    size = "F1"
-  }
+  sku_name            = "F1" # Free Tier Plan
 }
 
 # Blue App Service
@@ -47,17 +41,24 @@ resource "azurerm_app_service" "green_app" {
 
 # Traffic Manager Profile
 resource "azurerm_traffic_manager_profile" "test_profile" {
-  name                    = var.traffic_manager_name
-  resource_group_name     = azurerm_resource_group.rg.name
+  name                = var.traffic_manager_name
+  resource_group_name = azurerm_resource_group.rg.name
   traffic_routing_method  = "Priority"
+
   dns_config {
-    relative_name          = var.traffic_manager_name
-    ttl                    = 60
+    relative_name = var.traffic_manager_name
+    ttl           = 60
+  }
+
+  monitor_config {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/"
   }
 }
 
 # Traffic Manager Endpoints
-resource "azurerm_traffic_manager_profile_endpoint" "blue_endpoint" {
+resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
   name                    = "blue-endpoint"
   profile_name            = azurerm_traffic_manager_profile.test_profile.name
   resource_group_name     = azurerm_resource_group.rg.name
@@ -66,7 +67,7 @@ resource "azurerm_traffic_manager_profile_endpoint" "blue_endpoint" {
   priority                = (var.active_app_environment == "blue" ? 1 : 2)
 }
 
-resource "azurerm_traffic_manager_profile_endpoint" "green_endpoint" {
+resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
   name                    = "green-endpoint"
   profile_name            = azurerm_traffic_manager_profile.test_profile.name
   resource_group_name     = azurerm_resource_group.rg.name
