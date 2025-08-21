@@ -8,13 +8,13 @@ resource "azurerm_resource_group" "rg" {
   location = var.azure_location
 }
 
-# App Service Plans
+# Service Plans
 resource "azurerm_service_plan" "blue_plan" {
   name                = "blue-service-plan"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   sku_name            = "F1" # Free Tier Plan
-  os_type             = "Linux" # Specify Linux as the operating system
+  os_type             = "Linux"
 }
 
 resource "azurerm_service_plan" "green_plan" {
@@ -22,30 +22,46 @@ resource "azurerm_service_plan" "green_plan" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   sku_name            = "F1" # Free Tier Plan
-  os_type             = "Linux" # Specify Linux as the operating system
+  os_type             = "Linux"
 }
 
 # Blue App Service
-resource "azurerm_app_service" "blue_app" {
+resource "azurerm_linux_web_app" "blue_app" {
   name                = var.blue_app_name
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  app_service_plan_id = azurerm_service_plan.blue_plan.id
+  service_plan_id     = azurerm_service_plan.blue_plan.id
+
+  site_config {
+    always_on = true
+  }
+
+  app_settings = {
+    "WEBSITE_RUN_FROM_PACKAGE" = "1"
+  }
 }
 
 # Green App Service
-resource "azurerm_app_service" "green_app" {
+resource "azurerm_linux_web_app" "green_app" {
   name                = var.green_app_name
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  app_service_plan_id = azurerm_service_plan.green_plan.id
+  service_plan_id     = azurerm_service_plan.green_plan.id
+
+  site_config {
+    always_on = true
+  }
+
+  app_settings = {
+    "WEBSITE_RUN_FROM_PACKAGE" = "1"
+  }
 }
 
 # Traffic Manager Profile
 resource "azurerm_traffic_manager_profile" "test_profile" {
-  name                = var.traffic_manager_name
-  resource_group_name = azurerm_resource_group.rg.name
-  traffic_routing_method  = "Priority"
+  name                     = var.traffic_manager_name
+  resource_group_name      = azurerm_resource_group.rg.name
+  traffic_routing_method   = "Priority"
 
   dns_config {
     relative_name = var.traffic_manager_name
@@ -60,31 +76,29 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
 }
 
 # Traffic Manager Endpoints
-resource "azurerm_traffic_manager_profile_endpoint" "blue_endpoint" {
+resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
   name                    = "blue-endpoint"
-  profile_name            = azurerm_traffic_manager_profile.test_profile.name
-  resource_group_name     = azurerm_resource_group.rg.name
+  traffic_manager_profile_id = azurerm_traffic_manager_profile.test_profile.id
   type                    = "azureEndpoints"
-  target_resource_id      = azurerm_app_service.blue_app.id
+  target_resource_id      = azurerm_linux_web_app.blue_app.id
   priority                = (var.active_app_environment == "blue" ? 1 : 2)
 }
 
-resource "azurerm_traffic_manager_profile_endpoint" "green_endpoint" {
+resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
   name                    = "green-endpoint"
-  profile_name            = azurerm_traffic_manager_profile.test_profile.name
-  resource_group_name     = azurerm_resource_group.rg.name
+  traffic_manager_profile_id = azurerm_traffic_manager_profile.test_profile.id
   type                    = "azureEndpoints"
-  target_resource_id      = azurerm_app_service.green_app.id
+  target_resource_id      = azurerm_linux_web_app.green_app.id
   priority                = (var.active_app_environment == "green" ? 1 : 2)
 }
 
 # Output variables
 output "blue_app_domain" {
-  value = azurerm_app_service.blue_app.default_site_hostname
+  value = azurerm_linux_web_app.blue_app.default_site_hostname
 }
 
 output "green_app_domain" {
-  value = azurerm_app_service.green_app.default_site_hostname
+  value = azurerm_linux_web_app.green_app.default_site_hostname
 }
 
 output "active_app_environment" {
