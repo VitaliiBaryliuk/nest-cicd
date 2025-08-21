@@ -27,3 +27,15 @@ variable "active_app_environment" {
   description = "Determines the currently live environment (blue or green)"
   type        = string
 }
+
+variable "dns_zone_name" {
+  description = "The DNS zone name"
+  type        = string
+  default     = "blue-green-tm"
+}
+
+variable "active_app" {
+  description = "The active application environment (blue/green)"
+  type        = string
+  default     = "example.com"
+}

@@ -29,6 +29,23 @@ resource "azurerm_app_service_plan" "green_plan" {
   }
 }
 
+# Blue App Service
+resource "azurerm_app_service" "blue_app" {
+  name                = var.blue_app_name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  app_service_plan_id = azurerm_app_service_plan.blue_plan.id
+}
+
+# Green App Service
+resource "azurerm_app_service" "green_app" {
+  name                = var.green_app_name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  app_service_plan_id = azurerm_app_service_plan.green_plan.id
+}
+
+
 resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
   name                    = "blue-endpoint"
   profile_name            = azurerm_traffic_manager_profile.traffic_manager.name
