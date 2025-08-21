@@ -74,21 +74,21 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
     path     = "/"
   }
 
-  # Inline Endpoint for Blue App
-  endpoint {
-    name                    = "blue-endpoint"
-    type                    = "azureEndpoints"
-    target_resource_id      = azurerm_linux_web_app.blue_app.id
-    priority                = (var.active_app_environment == "blue" ? 1 : 2)
-  }
+  # # Inline Endpoint for Blue App
+  # endpoint {
+  #   name                    = "blue-endpoint"
+  #   type                    = "azureEndpoints"
+  #   target_resource_id      = azurerm_linux_web_app.blue_app.id
+  #   priority                = (var.active_app_environment == "blue" ? 1 : 2)
+  # }
 
-  # Inline Endpoint for Green App
-  endpoint {
-    name                    = "green-endpoint"
-    type                    = "azureEndpoints"
-    target_resource_id      = azurerm_linux_web_app.green_app.id
-    priority                = (var.active_app_environment == "green" ? 1 : 2)
-  }
+  # # Inline Endpoint for Green App
+  # endpoint {
+  #   name                    = "green-endpoint"
+  #   type                    = "azureEndpoints"
+  #   target_resource_id      = azurerm_linux_web_app.green_app.id
+  #   priority                = (var.active_app_environment == "green" ? 1 : 2)
+  # }
 }
 
 # Output Variables
