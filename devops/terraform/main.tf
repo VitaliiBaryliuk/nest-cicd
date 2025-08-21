@@ -29,37 +29,6 @@ resource "azurerm_app_service_plan" "green_plan" {
   }
 }
 
-# Add Blue endpoint to Traffic Manager (initial primary)
-resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
-  name                    = "blue-endpoint"
-  profile_name            = azurerm_traffic_manager_profile.tm_profile.name
-  resource_group_name     = azurerm_resource_group.rg.name
-  type                    = "azureEndpoints"
-  target_resource_id      = azurerm_app_service.blue_app.id
-  priority                = 1  # Higher priority means it's the preferred "live" service
-}
-
-# Add Green endpoint to Traffic Manager (secondary fallback or test environment)
-resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
-  name                    = "green-endpoint"
-  profile_name            = azurerm_traffic_manager_profile.tm_profile.name
-  resource_group_name     = azurerm_resource_group.rg.name
-  type                    = "azureEndpoints"
-  target_resource_id      = azurerm_app_service.green_app.id
-  priority                = 2  # Lower priority means it's secondary during blue-green switching
-}
-
-resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
-  priority = (var.active_app_environment == "blue_endpoint" ? 1 : 2)
-}
-
-resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
-  priority = (var.active_app_environment == "green_endpoint" ? 1 : 2)
-}
-
-
-
-
 resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
   name                    = "blue-endpoint"
   profile_name            = azurerm_traffic_manager_profile.traffic_manager.name
@@ -78,10 +47,8 @@ resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
   priority                = (var.active_app_environment == "green" ? 1 : 2)
 }
 
-
-
-
 # Output variables
+
 output "blue_app_domain" {
   value = azurerm_app_service.blue_app.default_site_hostname
 }
