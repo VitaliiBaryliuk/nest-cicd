@@ -8,12 +8,12 @@ resource "azurerm_resource_group" "rg" {
   location = var.azure_location
 }
 
-# Azure Service Plans
+# Service Plans
 resource "azurerm_service_plan" "blue_plan" {
   name                = "blue-service-plan"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  sku_name            = "F1" # Free tier plan
+  sku_name            = "F1" # Free Tier Plan
   os_type             = "Linux"
 }
 
@@ -21,7 +21,7 @@ resource "azurerm_service_plan" "green_plan" {
   name                = "green-service-plan"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  sku_name            = "F1" # Free tier plan
+  sku_name            = "F1" # Free Tier Plan
   os_type             = "Linux"
 }
 
@@ -57,7 +57,7 @@ resource "azurerm_linux_web_app" "green_app" {
   }
 }
 
-# Traffic Manager Profile
+# Traffic Manager Profile with Inline Endpoints
 resource "azurerm_traffic_manager_profile" "test_profile" {
   name                     = var.traffic_manager_name
   resource_group_name      = azurerm_resource_group.rg.name
@@ -73,26 +73,22 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
     port     = 80
     path     = "/"
   }
-}
 
-# Blue Traffic Manager Endpoint
-resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
-  name                    = "blue-endpoint"
-  traffic_manager_profile_id = azurerm_traffic_manager_profile.test_profile.id
-  resource_group_name     = azurerm_resource_group.rg.name
-  type                    = "azureEndpoints"
-  target_resource_id      = azurerm_linux_web_app.blue_app.id
-  priority                = (var.active_app_environment == "blue" ? 1 : 2)
-}
+  # Inline Endpoint for Blue App
+  endpoint {
+    name                    = "blue-endpoint"
+    type                    = "azureEndpoints"
+    target_resource_id      = azurerm_linux_web_app.blue_app.id
+    priority                = (var.active_app_environment == "blue" ? 1 : 2)
+  }
 
-# Green Traffic Manager Endpoint
-resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
-  name                    = "green-endpoint"
-  traffic_manager_profile_id = azurerm_traffic_manager_profile.test_profile.id
-  resource_group_name     = azurerm_resource_group.rg.name
-  type                    = "azureEndpoints"
-  target_resource_id      = azurerm_linux_web_app.green_app.id
-  priority                = (var.active_app_environment == "green" ? 1 : 2)
+  # Inline Endpoint for Green App
+  endpoint {
+    name                    = "green-endpoint"
+    type                    = "azureEndpoints"
+    target_resource_id      = azurerm_linux_web_app.green_app.id
+    priority                = (var.active_app_environment == "green" ? 1 : 2)
+  }
 }
 
 # Output Variables
