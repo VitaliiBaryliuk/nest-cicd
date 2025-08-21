@@ -14,6 +14,7 @@ resource "azurerm_service_plan" "blue_plan" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   sku_name            = "F1" # Free Tier Plan
+  os_type             = "Linux" # Specify Linux as the operating system
 }
 
 resource "azurerm_service_plan" "green_plan" {
@@ -21,6 +22,7 @@ resource "azurerm_service_plan" "green_plan" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   sku_name            = "F1" # Free Tier Plan
+  os_type             = "Linux" # Specify Linux as the operating system
 }
 
 # Blue App Service
@@ -58,7 +60,7 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
 }
 
 # Traffic Manager Endpoints
-resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
+resource "azurerm_traffic_manager_profile_endpoint" "blue_endpoint" {
   name                    = "blue-endpoint"
   profile_name            = azurerm_traffic_manager_profile.test_profile.name
   resource_group_name     = azurerm_resource_group.rg.name
@@ -67,7 +69,7 @@ resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
   priority                = (var.active_app_environment == "blue" ? 1 : 2)
 }
 
-resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
+resource "azurerm_traffic_manager_profile_endpoint" "green_endpoint" {
   name                    = "green-endpoint"
   profile_name            = azurerm_traffic_manager_profile.test_profile.name
   resource_group_name     = azurerm_resource_group.rg.name
