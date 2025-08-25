@@ -84,24 +84,22 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
   }
 }
 
-# Blue Endpoint
 resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
-  name                         = "blue-endpoint"
-  profile_name                 = azurerm_traffic_manager_profile.test_profile.name
-  resource_group_name          = azurerm_resource_group.rg.name
-  type                         = "azureEndpoints"
-  target_resource_id           = azurerm_linux_web_app.blue_app.id
-  priority                     = var.active_app_environment == "blue" ? 1 : 2
+  name                = "blue-endpoint"
+  profile_name        = azurerm_traffic_manager_profile.test_profile.name
+  resource_group_name = azurerm_resource_group.rg.name
+  type                = "azureEndpoints"
+  target_resource_id  = azurerm_linux_web_app.blue_app.id
+  priority            = 1 # Set statically to avoid any var or logical problems
 }
 
-# Green Endpoint
 resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
-  name                         = "green-endpoint"
-  profile_name                 = azurerm_traffic_manager_profile.test_profile.name
-  resource_group_name          = azurerm_resource_group.rg.name
-  type                         = "azureEndpoints"
-  target_resource_id           = azurerm_linux_web_app.green_app.id
-  priority                     = var.active_app_environment == "green" ? 1 : 2
+  name                = "green-endpoint"
+  profile_name        = azurerm_traffic_manager_profile.test_profile.name
+  resource_group_name = azurerm_resource_group.rg.name
+  type                = "azureEndpoints"
+  target_resource_id  = azurerm_linux_web_app.green_app.id
+  priority            = 2 # Static priority for testing
 }
 
 # Output Variables
