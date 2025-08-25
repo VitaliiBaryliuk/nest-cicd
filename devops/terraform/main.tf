@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">=3.77.0" # Update to the latest version supported
+      version = ">=3.77.0"
     }
   }
 }
@@ -84,22 +84,24 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
   }
 }
 
-resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
-  name                = "blue-endpoint"
-  profile_name        = azurerm_traffic_manager_profile.test_profile.name
-  resource_group_name = azurerm_resource_group.rg.name
-  type                = "azureEndpoints"
-  target_resource_id  = azurerm_linux_web_app.blue_app.id
-  priority            = 1 # Set statically to avoid any var or logical problems
+# Blue Endpoint - Migrated to azurerm_traffic_manager_azure_endpoint
+resource "azurerm_traffic_manager_azure_endpoint" "blue_endpoint" {
+  name                         = "blue-endpoint"
+  profile_name                 = azurerm_traffic_manager_profile.test_profile.name
+  resource_group_name          = azurerm_resource_group.rg.name
+  target_resource_id           = azurerm_linux_web_app.blue_app.id
+  priority                     = var.active_app_environment == "blue" ? 1 : 2
+  weight                       = 100
 }
 
-resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
-  name                = "green-endpoint"
-  profile_name        = azurerm_traffic_manager_profile.test_profile.name
-  resource_group_name = azurerm_resource_group.rg.name
-  type                = "azureEndpoints"
-  target_resource_id  = azurerm_linux_web_app.green_app.id
-  priority            = 2 # Static priority for testing
+# Green Endpoint - Migrated to azurerm_traffic_manager_azure_endpoint
+resource "azurerm_traffic_manager_azure_endpoint" "green_endpoint" {
+  name                         = "green-endpoint"
+  profile_name                 = azurerm_traffic_manager_profile.test_profile.name
+  resource_group_name          = azurerm_resource_group.rg.name
+  target_resource_id           = azurerm_linux_web_app.green_app.id
+  priority                     = var.active_app_environment == "green" ? 1 : 2
+  weight                       = 100
 }
 
 # Output Variables
