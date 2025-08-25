@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     azurerm = {
-      source = "hashicorp/azurerm"
-      version = ">= 3.77.0" # Ensure you're using the latest version or a compatible version
+      source  = "hashicorp/azurerm"
+      version = ">=3.77.0" # Update to the latest version supported
     }
   }
 }
@@ -65,6 +65,8 @@ resource "azurerm_linux_web_app" "green_app" {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
   }
 }
+
+# Traffic Manager Profile
 resource "azurerm_traffic_manager_profile" "test_profile" {
   name                     = var.traffic_manager_name
   resource_group_name      = azurerm_resource_group.rg.name
@@ -80,22 +82,26 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
     port     = 80
     path     = "/"
   }
+}
 
-  # Inline Endpoint for Blue App
-  endpoint {
-    name               = "blue-endpoint"
-    type               = "azureEndpoints"
-    target_resource_id = azurerm_linux_web_app.blue_app.id
-    priority           = var.active_app_environment == "blue" ? 1 : 2
-  }
+# Blue Endpoint
+resource "azurerm_traffic_manager_endpoint" "blue_endpoint" {
+  name                         = "blue-endpoint"
+  profile_name                 = azurerm_traffic_manager_profile.test_profile.name
+  resource_group_name          = azurerm_resource_group.rg.name
+  type                         = "azureEndpoints"
+  target_resource_id           = azurerm_linux_web_app.blue_app.id
+  priority                     = var.active_app_environment == "blue" ? 1 : 2
+}
 
-  # Inline Endpoint for Green App
-  endpoint {
-    name               = "green-endpoint"
-    type               = "azureEndpoints"
-    target_resource_id = azurerm_linux_web_app.green_app.id
-    priority           = var.active_app_environment == "green" ? 1 : 2
-  }
+# Green Endpoint
+resource "azurerm_traffic_manager_endpoint" "green_endpoint" {
+  name                         = "green-endpoint"
+  profile_name                 = azurerm_traffic_manager_profile.test_profile.name
+  resource_group_name          = azurerm_resource_group.rg.name
+  type                         = "azureEndpoints"
+  target_resource_id           = azurerm_linux_web_app.green_app.id
+  priority                     = var.active_app_environment == "green" ? 1 : 2
 }
 
 # Output Variables
