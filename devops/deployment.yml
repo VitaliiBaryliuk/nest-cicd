@@ -17,10 +17,16 @@ stages:
         runOnce:
           deploy:
             steps:
-              # Step 1: Checkout Repository
+              # Step 1: Authenticate to Azure using Service Connection
+              - task: UseAzureCLI@1
+                inputs:
+                  azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
+                displayName: 'Authenticate with Azure CLI'
+
+              # Step 2: Checkout Repository
               - checkout: self
 
-              # Step 2: Debug Working Directory (Windows Compatible)
+              # Step 3: Debug Working Directory (Windows Compatible)
               - script: |
                   echo Debugging working directory
                   echo System Default Working Directory: %SYSTEM_DEFAULTWORKINGDIRECTORY%
@@ -28,7 +34,7 @@ stages:
                   dir %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
                 displayName: 'Debug Working Directory'
 
-              # Step 3: Determine Active/Inactive Environments
+              # Step 4: Determine Active/Inactive Environments
               - script: |
                   echo Determining inactive environment...
                   cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
@@ -45,15 +51,7 @@ stages:
                   )
                 displayName: 'Set Active/Inactive Environments'
 
-              # Step 4: Provision Infrastructure Using Terraform
-              - task: UseAzureCLI@1  # Authenticate with Azure using the Service Connection
-                inputs:
-                  azureSubscription: 'YourServiceConnectionName'
-
-              - task: TerraformInstaller@0
-                inputs:
-                  terraformVersion: 'latest'
-
+              # Step 5: Provision Infrastructure Using Terraform
               - script: |
                   echo Provisioning infrastructure using Terraform...
                   cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
@@ -62,11 +60,11 @@ stages:
                   terraform apply -auto-approve tfplan
                 displayName: 'Provision Infrastructure'
 
-              # Step 5: Deploy Application to Inactive Environment
+              # Step 6: Deploy Application to Inactive Environment
               - task: AzureRmWebAppDeployment@4
                 displayName: 'Deploy Application to $(inactiveEnvironment)'
                 inputs:
-                  azureSubscription: 'AzureServicesConnection'  # Replace with Azure DevOps service connection
+                  azureSubscription: 'AzureServicesConnection'  # Replace with your Azure DevOps service connection
                   appType: webApp
                   WebAppName: "$(inactiveEnvironment)-nestjs-app"
                   packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
@@ -98,6 +96,12 @@ stages:
       dependsOn: approval_job  # Depends on ManualValidation outcome
       pool: 'SelfHostedPool'  # Replace with your agent pool for Terraform scripts
       steps:
+        # Re-authentication to Azure before applying Terraform
+        - task: UseAzureCLI@1
+          inputs:
+            azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
+          displayName: 'Authenticate with Azure CLI for Traffic Updates'
+        
         # Apply Traffic Update if Approved
         - script: |
             echo "Switching traffic to $(inactiveEnvironment)..."
@@ -112,7 +116,6 @@ stages:
           displayName: 'Rollback Traffic Decision'
           condition: failed(dependencies.approval_job)  # Run if ManualValidation was rejected
 
-
 # Stage 3: Finalize Deployment or Confirm Rollback
 - stage: finalize_stage
   displayName: 'Finalize Deployment or Confirm Rollback'
@@ -125,6 +128,12 @@ stages:
         runOnce:
           deploy:
             steps:
+              # Re-authentication to Azure before final Terraform execution
+              - task: UseAzureCLI@1
+                inputs:
+                  azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
+                displayName: 'Authenticate with Azure CLI for Finalization'
+              
               - script: |
                   echo "Finalizing deployment based on approval."
                   if [ "$(approval.status)" = "approved" ]; then
