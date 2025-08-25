@@ -46,6 +46,14 @@ stages:
                 displayName: 'Set Active/Inactive Environments'
 
               # Step 4: Provision Infrastructure Using Terraform
+              - task: UseAzureCLI@1  # Authenticate with Azure using the Service Connection
+                inputs:
+                  azureSubscription: 'YourServiceConnectionName'
+
+              - task: TerraformInstaller@0
+                inputs:
+                  terraformVersion: 'latest'
+
               - script: |
                   echo Provisioning infrastructure using Terraform...
                   cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
