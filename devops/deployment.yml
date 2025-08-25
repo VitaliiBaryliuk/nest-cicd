@@ -17,10 +17,14 @@ stages:
         runOnce:
           deploy:
             steps:
-              # Step 1: Authenticate to Azure using Service Connection
-              - task: UseAzureCLI@1
+              # Step 1: Authenticate to Azure using AzureCLI@2
+              - task: AzureCLI@2
                 inputs:
                   azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
+                  scriptType: bash
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    echo "Authenticated to Azure"
                 displayName: 'Authenticate with Azure CLI'
 
               # Step 2: Checkout Repository
@@ -96,10 +100,14 @@ stages:
       dependsOn: approval_job  # Depends on ManualValidation outcome
       pool: 'SelfHostedPool'  # Replace with your agent pool for Terraform scripts
       steps:
-        # Re-authentication to Azure before applying Terraform
-        - task: UseAzureCLI@1
+        # Re-authenticate to Azure before applying Terraform
+        - task: AzureCLI@2
           inputs:
             azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+              echo "Re-authenticated to Azure CLI"
           displayName: 'Authenticate with Azure CLI for Traffic Updates'
         
         # Apply Traffic Update if Approved
@@ -129,9 +137,13 @@ stages:
           deploy:
             steps:
               # Re-authentication to Azure before final Terraform execution
-              - task: UseAzureCLI@1
+              - task: AzureCLI@2
                 inputs:
                   azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
+                  scriptType: bash
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    echo "Re-authenticated to Azure CLI for Finalization"
                 displayName: 'Authenticate with Azure CLI for Finalization'
               
               - script: |
