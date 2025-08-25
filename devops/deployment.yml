@@ -2,6 +2,7 @@ name: 'nestjs-blue-green-cicd'
 
 variables:
   System.Debug: true
+  ARM_SUBSCRIPTION_ID: "703d10f6-9dab-4401-ac0f-cade6c18279e"
 
 stages:
 # Stage 1: Deploy and Test Initial App Environment
@@ -19,6 +20,10 @@ stages:
             steps:
               # Step 2: Checkout Repository
               - checkout: self
+              - script: |
+                  echo "Checking Azure CLI Version..."
+                  az --version
+                displayName: "Check Azure CLI Version"
               - script: |
                   az login
                   az account show
@@ -57,8 +62,11 @@ stages:
                   echo Provisioning infrastructure using Terraform...
                   cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
                   terraform init
+                  terraform refresh
                   terraform plan -var="active_app=%inactiveEnvironment%" -out=tfplan
                   terraform apply -auto-approve tfplan
+                env:
+                  ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
                 displayName: 'Provision Infrastructure'
 
               # Step 6: Deploy Application to Inactive Environment
