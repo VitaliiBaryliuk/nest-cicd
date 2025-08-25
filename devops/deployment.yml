@@ -20,9 +20,11 @@ stages:
               # Step 2: Checkout Repository
               - checkout: self
               - script: |
-                  az --version
-                  echo "Ensure Azure CLI version is 2.40.0 or newer"
-                displayName: "Check Azure CLI Version"
+                  az login
+                  az account show
+                  az account get-access-token
+                  echo "Authentication complete"
+                displayName: "Debug Azure CLI Authentication"
               # Step 3: Debug Working Directory (Windows Compatible)
               - script: |
                   echo Debugging working directory
