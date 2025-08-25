@@ -17,16 +17,6 @@ stages:
         runOnce:
           deploy:
             steps:
-              # Step 1: Authenticate to Azure using AzureCLI@2
-              - task: AzureCLI@2
-                inputs:
-                  azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
-                  scriptType: bash
-                  scriptLocation: inlineScript
-                  inlineScript: |
-                    echo "Authenticated to Azure"
-                displayName: 'Authenticate with Azure CLI'
-
               # Step 2: Checkout Repository
               - checkout: self
 
@@ -54,7 +44,9 @@ stages:
                       echo ##vso[task.setvariable variable=activeEnvironment]green
                   )
                 displayName: 'Set Active/Inactive Environments'
-
+              - task: TerraformInstaller@0
+                inputs:
+                  terraformVersion: "latest"
               # Step 5: Provision Infrastructure Using Terraform
               - script: |
                   echo Provisioning infrastructure using Terraform...
