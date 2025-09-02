@@ -88,7 +88,7 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
 # Blue Endpoint
 resource "azurerm_traffic_manager_azure_endpoint" "blue_endpoint" {
   name                = "blue-endpoint"
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
   profile_id          = azurerm_traffic_manager_profile.test_profile.id  # Use profile_id, not profile_name
   target_resource_id  = azurerm_linux_web_app.blue_app.id                # Target App Service
   priority            = var.active_app_environment == "blue" ? 1 : 2
@@ -98,7 +98,7 @@ resource "azurerm_traffic_manager_azure_endpoint" "blue_endpoint" {
 # Green Endpoint
 resource "azurerm_traffic_manager_azure_endpoint" "green_endpoint" {
   name                = "green-endpoint"
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
   profile_id          = azurerm_traffic_manager_profile.test_profile.id  # Use profile_id, not profile_name
   target_resource_id  = azurerm_linux_web_app.green_app.id               # Target App Service
   priority            = var.active_app_environment == "green" ? 1 : 2
