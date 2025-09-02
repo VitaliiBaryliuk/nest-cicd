@@ -42,7 +42,7 @@ resource "azurerm_linux_web_app" "blue_app" {
   service_plan_id     = azurerm_service_plan.blue_plan.id
 
   site_config {
-    always_on = true
+    always_on = false
   }
 
   app_settings = {
@@ -58,7 +58,7 @@ resource "azurerm_linux_web_app" "green_app" {
   service_plan_id     = azurerm_service_plan.green_plan.id
 
   site_config {
-    always_on = true
+    always_on = false
   }
 
   app_settings = {
