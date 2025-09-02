@@ -68,6 +68,8 @@ stages:
                   terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
                   terraform import azurerm_service_plan.blue_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/blue-service-plan
                   terraform import azurerm_service_plan.green_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/green-service-plan
+                  terraform import azurerm_service_plan.green_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app
+                  terraform import azurerm_service_plan.green_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/green-nestjs-cicd-app
                   terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
                   terraform refresh
                   terraform plan -var="active_app=%inactiveEnvironment%" -out=tfplan
