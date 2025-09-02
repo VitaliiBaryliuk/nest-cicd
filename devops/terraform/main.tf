@@ -103,12 +103,11 @@ resource "azurerm_traffic_manager_azure_endpoint" "green_endpoint" {
   weight              = 100
 }
 
-# Output Variables
-output "blue_app_domain" {
+output "blue_app_hostname" {
   value = azurerm_linux_web_app.blue_app.default_hostname
 }
 
-output "green_app_domain" {
+output "green_app_hostname" {
   value = azurerm_linux_web_app.green_app.default_hostname
 }
 
