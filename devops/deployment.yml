@@ -18,6 +18,7 @@ stages:
         runOnce:
           deploy:
             steps:
+
               # Step 2: Checkout Repository
               - checkout: self
               - script: |
@@ -30,6 +31,7 @@ stages:
                   az account get-access-token
                   echo "Authentication complete"
                 displayName: "Debug Azure CLI Authentication"
+
               # Step 3: Debug Working Directory (Windows Compatible)
               - script: |
                   echo Debugging working directory
@@ -57,11 +59,13 @@ stages:
               - task: TerraformInstaller@0
                 inputs:
                   terraformVersion: "latest"
+
               # Step 5: Provision Infrastructure Using Terraform
               - script: |
                   echo Provisioning infrastructure using Terraform...
                   cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
                   terraform init
+                  terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
                   terraform refresh
                   terraform plan -var="active_app=%inactiveEnvironment%" -out=tfplan
                   terraform apply -auto-approve tfplan
