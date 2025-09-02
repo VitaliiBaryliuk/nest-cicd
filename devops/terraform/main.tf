@@ -20,7 +20,7 @@ resource "azurerm_resource_group" "rg" {
 # Service Plans
 resource "azurerm_service_plan" "blue_plan" {
   name                = "blue-service-plan"
-  location            = azurerm_resource_group.rg.location
+  location            = "northeurope"
   resource_group_name = azurerm_resource_group.rg.name
   sku_name            = "F1" # Free Tier Plan
   os_type             = "Linux"
@@ -28,7 +28,7 @@ resource "azurerm_service_plan" "blue_plan" {
 
 resource "azurerm_service_plan" "green_plan" {
   name                = "green-service-plan"
-  location            = azurerm_resource_group.rg.location
+  location            = "northeurope"
   resource_group_name = azurerm_resource_group.rg.name
   sku_name            = "F1" # Free Tier Plan
   os_type             = "Linux"
@@ -37,7 +37,7 @@ resource "azurerm_service_plan" "green_plan" {
 # Blue App Service
 resource "azurerm_linux_web_app" "blue_app" {
   name                = var.blue_app_name
-  location            = azurerm_resource_group.rg.location
+  location            = "northeurope"
   resource_group_name = azurerm_resource_group.rg.name
   service_plan_id     = azurerm_service_plan.blue_plan.id
 
@@ -53,7 +53,7 @@ resource "azurerm_linux_web_app" "blue_app" {
 # Green App Service
 resource "azurerm_linux_web_app" "green_app" {
   name                = var.green_app_name
-  location            = azurerm_resource_group.rg.location
+  location            = "northeurope"
   resource_group_name = azurerm_resource_group.rg.name
   service_plan_id     = azurerm_service_plan.green_plan.id
 
