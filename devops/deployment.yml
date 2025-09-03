@@ -19,12 +19,21 @@ stages:
           deploy:
             steps:
 
-              # Step 2: Checkout Repository
+              # Step 1: Checkout Repository
               - checkout: self
               - script: |
                   echo "Checking Azure CLI Version..."
                   az --version
                 displayName: "Check Azure CLI Version"
+
+              # Step 2: Build the Application
+              - script: |
+                  echo "Installing dependencies..."
+                  npm install
+                  echo "Building NestJS application..."
+                  npm run build
+                displayName: "Build Application"
+
               - script: |
                   az login
                   az account show
