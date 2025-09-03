@@ -41,6 +41,9 @@ resource "azurerm_linux_web_app" "blue_app" {
   resource_group_name = azurerm_resource_group.rg.name
   service_plan_id     = azurerm_service_plan.blue_plan.id
 
+  # Ensure this depends on the Service Plan (blue_plan)
+  depends_on = [azurerm_service_plan.blue_plan]
+
   site_config {
     always_on = false
   }
@@ -56,6 +59,9 @@ resource "azurerm_linux_web_app" "green_app" {
   location            = "northeurope"
   resource_group_name = azurerm_resource_group.rg.name
   service_plan_id     = azurerm_service_plan.green_plan.id
+
+  # Ensure this depends on the Service Plan (green_plan)
+  depends_on = [azurerm_service_plan.green_plan]
 
   site_config {
     always_on = false
@@ -84,41 +90,35 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
   }
 }
 
+# Blue Endpoint
 resource "azurerm_traffic_manager_azure_endpoint" "blue_endpoint" {
   name                = "blue-endpoint"
   profile_id          = azurerm_traffic_manager_profile.test_profile.id
-  # target_resource_id  = azurerm_linux_web_app.blue_app.id # Direct link to App Service ID
-  target     = azurerm_linux_web_app.blue_app.default_hostname
+  target_resource_id  = azurerm_linux_web_app.blue_app.id # Direct link to App Service ID
   priority            = 1
   weight              = 100
+
+  # Ensure this depends on both the App Service (blue_app) and Traffic Manager profile
+  depends_on = [
+    azurerm_linux_web_app.blue_app,
+    azurerm_traffic_manager_profile.test_profile
+  ]
 }
 
+# Green Endpoint
 resource "azurerm_traffic_manager_azure_endpoint" "green_endpoint" {
   name                = "green-endpoint"
   profile_id          = azurerm_traffic_manager_profile.test_profile.id
-  # target_resource_id  = azurerm_linux_web_app.green_app.id # Direct link to App Service ID
-  target     = azurerm_linux_web_app.green_app.default_hostname
+  target_resource_id  = azurerm_linux_web_app.green_app.id # Direct link to App Service ID
   priority            = 2
   weight              = 50
+
+  # Ensure this depends on both the App Service (green_app) and Traffic Manager profile
+  depends_on = [
+    azurerm_linux_web_app.green_app,
+    azurerm_traffic_manager_profile.test_profile
+  ]
 }
-
-# # Blue Endpoint
-# resource "azurerm_traffic_manager_external_endpoint" "blue_endpoint" {
-#   name       = "blue-endpoint"
-#   profile_id = azurerm_traffic_manager_profile.test_profile.id
-#   target     = azurerm_linux_web_app.blue_app.default_hostname  # Default DNS for Blue App Service
-#   priority   = 1
-#   weight     = 100
-# }
-
-# # Green Endpoint
-# resource "azurerm_traffic_manager_external_endpoint" "green_endpoint" {
-#   name       = "green-endpoint"
-#   profile_id = azurerm_traffic_manager_profile.test_profile.id
-#   target     = azurerm_linux_web_app.green_app.default_hostname  # Default DNS for Green App Service
-#   priority   = 2
-#   weight     = 100
-# }
 
 output "blue_app_hostname" {
   value = azurerm_linux_web_app.blue_app.default_hostname
