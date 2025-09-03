@@ -87,7 +87,8 @@ resource "azurerm_traffic_manager_profile" "test_profile" {
 resource "azurerm_traffic_manager_azure_endpoint" "blue_endpoint" {
   name                = "blue-endpoint"
   profile_id          = azurerm_traffic_manager_profile.test_profile.id
-  target_resource_id  = azurerm_linux_web_app.blue_app.id # Direct link to App Service ID
+  # target_resource_id  = azurerm_linux_web_app.blue_app.id # Direct link to App Service ID
+  target     = azurerm_linux_web_app.blue_app.default_hostname
   priority            = 1
   weight              = 100
 }
@@ -95,7 +96,8 @@ resource "azurerm_traffic_manager_azure_endpoint" "blue_endpoint" {
 resource "azurerm_traffic_manager_azure_endpoint" "green_endpoint" {
   name                = "green-endpoint"
   profile_id          = azurerm_traffic_manager_profile.test_profile.id
-  target_resource_id  = azurerm_linux_web_app.green_app.id # Direct link to App Service ID
+  # target_resource_id  = azurerm_linux_web_app.green_app.id # Direct link to App Service ID
+  target     = azurerm_linux_web_app.green_app.default_hostname
   priority            = 2
   weight              = 50
 }
