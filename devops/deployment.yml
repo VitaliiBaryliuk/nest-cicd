@@ -121,6 +121,11 @@ stages:
                   WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
                   packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
+              - script: |
+                  echo "Run application..."
+                  npm start
+                displayName: "Run application"
+
 
 # Stage 2: Switch Traffic Approval
 - stage: approval_stage
