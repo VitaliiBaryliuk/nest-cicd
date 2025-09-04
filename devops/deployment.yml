@@ -36,7 +36,7 @@ stages:
 
               - script: |
                   echo "Checking dist folder content..."
-                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%\dist
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
                 displayName: "Verify dist Folder"  
 
               - script: |
