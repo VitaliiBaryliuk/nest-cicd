@@ -118,7 +118,7 @@ stages:
                 inputs:
                   azureSubscription: 'AzureServicesConnection'
                   appType: webApp
-                  WebAppName: "$(inactiveEnvironment)-nestjs-app"
+                  WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
                   packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
 
