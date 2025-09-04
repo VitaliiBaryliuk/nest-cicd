@@ -31,13 +31,16 @@ stages:
                   echo "Installing dependencies..."
                   npm install
                   echo "Building NestJS application..."
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
                   npm run build
+                  echo "After Build"
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
                 displayName: "Build Application"
 
-              - script: |
-                  echo "Checking dist folder content..."
-                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
-                displayName: "Verify dist Folder"  
+              # - script: |
+              #     echo "Checking dist folder content..."
+              #     dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
+              #   displayName: "Verify dist Folder"  
 
               - script: |
                   az login
