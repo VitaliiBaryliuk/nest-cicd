@@ -26,12 +26,19 @@ stages:
                   az --version
                 displayName: "Check Azure CLI Version"
 
-              # Step 2: Build the Application
+              # Step 2: Installing dependencies...
               - script: |
                   echo "Installing dependencies..."
                   npm install
                   echo "Building NestJS application..."
                   dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                  npm run build
+                  echo "After Build"
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                displayName: "Installing dependencies"
+
+              # Step 2.2: Build the Application
+              - script: |
                   npm run build
                   echo "After Build"
                   dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
