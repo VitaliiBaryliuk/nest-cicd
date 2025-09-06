@@ -46,13 +46,12 @@ resource "azurerm_linux_web_app" "blue_app" {
 
   site_config {
     always_on = false
-    startup_command = "node dist/main.js"
   }
 
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
+    "PORT": "3000"
   }
-  startup_command = "node dist/main.js"
 }
 
 # Green App Service
@@ -67,11 +66,11 @@ resource "azurerm_linux_web_app" "green_app" {
 
   site_config {
     always_on = false
-    startup_command = "node dist/main.js"
   }
 
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
+    "PORT": "3000"
   }
 }
 
