@@ -53,6 +53,9 @@ resource "azurerm_linux_web_app" "blue_app" {
 
   logs {
     detailed_error_messages = true
+    application_logs {
+      file_system_level = "Warning"
+    }
   }
 
   app_settings = {
@@ -80,6 +83,9 @@ resource "azurerm_linux_web_app" "green_app" {
 
   logs {
     detailed_error_messages = true
+    application_logs {
+      file_system_level = "Warning"
+    }
   }
 
   app_settings = {
