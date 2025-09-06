@@ -51,18 +51,6 @@ resource "azurerm_linux_web_app" "blue_app" {
     }
   }
 
-  # THIS IS THE CRITICAL FIX FOR LOGGING
-  logs {
-    http_logs {
-      file_system {
-        retention_in_days = 1
-        retention_in_mb   = 35
-      }
-    }
-    detailed_error_messages_enabled = true
-    failed_request_tracing_enabled  = true
-  }
-
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
     "PORT": "3000"
