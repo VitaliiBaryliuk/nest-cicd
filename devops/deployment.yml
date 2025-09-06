@@ -121,25 +121,32 @@ stages:
               #     WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
               #     packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
-              - task: 7-ZipInstaller@1
-                displayName: 'Install 7-Zip'
-
-              # STEP 2: Use 7-Zip to create the archive
               - script: |
-                  echo "Archiving application using 7-Zip..."
-                  rem The 'a' command adds to an archive. '-tzip' specifies the zip format.
-                  7z a -tzip "$(Build.ArtifactStagingDirectory)/application.zip" ".\dist" ".\node_modules" ".\package.json" ".\package-lock.json"
-                displayName: 'Archive Application with 7-Zip'
+                  echo "Removing node_modules to create a clean deployment package..."
+                  rd /s /q node_modules
+                displayName: 'Remove node_modules for Packaging'
 
-              - task: AzureRmWebAppDeployment@4
-                displayName: 'Deploy Application to $(inactiveEnvironment)'
+              # STEP 3: Archive everything ELSE using the standard task
+              # This will now succeed because the problematic node_modules folder is gone.
+              # The archive will contain 'dist', 'package.json', 'package-lock.json', etc.
+              - task: ArchiveFiles@2
+                displayName: 'Archive Application Source for Deployment'
                 inputs:
-                  # ... your other inputs are correct
-                  azureSubscription: 'AzureServicesConnection'
-                  appType: 'webAppLinux'
-                  WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
-                  package: '$(Build.ArtifactStagingDirectory)/application.zip'
-                  deploymentMethod: 'zipDeploy'
+                  rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+                  includeRootFolder: false
+                  archiveType: 'zip'
+                  archiveFile: '$(Build.ArtifactStagingDirectory)/application.zip'
+                  replaceExistingArchive: true
+
+
+              - task: ArchiveFiles@2
+                displayName: 'Archive Application Source for Deployment'
+                inputs:
+                  rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+                  includeRootFolder: false
+                  archiveType: 'zip'
+                  archiveFile: '$(Build.ArtifactStagingDirectory)/application.zip'
+                  replaceExistingArchive: true
 
 
 # Stage 2: Switch Traffic Approval
