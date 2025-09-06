@@ -121,10 +121,13 @@ stages:
               #     WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
               #     packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
+              - task: 7-ZipInstaller@1
+                displayName: 'Install 7-Zip'
+
+              # STEP 2: Use 7-Zip to create the archive
               - script: |
                   echo "Archiving application using 7-Zip..."
                   rem The 'a' command adds to an archive. '-tzip' specifies the zip format.
-                  rem We explicitly list what to include for a clean package.
                   7z a -tzip "$(Build.ArtifactStagingDirectory)/application.zip" ".\dist" ".\node_modules" ".\package.json" ".\package-lock.json"
                 displayName: 'Archive Application with 7-Zip'
 
