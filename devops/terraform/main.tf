@@ -46,6 +46,9 @@ resource "azurerm_linux_web_app" "blue_app" {
 
   site_config {
     always_on = false
+    application_stack {
+      node_version = "18-lts" # Or a version compatible with your project
+    }
   }
 
   app_settings = {
@@ -66,6 +69,10 @@ resource "azurerm_linux_web_app" "green_app" {
 
   site_config {
     always_on = false
+      application_stack 
+      {
+      node_version = "18-lts" # Or a version compatible with your project
+    }
   }
 
   app_settings = {
