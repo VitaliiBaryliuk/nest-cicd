@@ -59,7 +59,7 @@ resource "azurerm_linux_web_app" "blue_app" {
   }
 
   app_settings = {
-    "WEBSITE_RUN_FROM_PACKAGE" = "0"
+    # "WEBSITE_RUN_FROM_PACKAGE" = "0"
     "PORT": "3000"
   }
 }
@@ -89,7 +89,7 @@ resource "azurerm_linux_web_app" "green_app" {
   }
 
   app_settings = {
-    "WEBSITE_RUN_FROM_PACKAGE" = "0"
+    # "WEBSITE_RUN_FROM_PACKAGE" = "0"
     "PORT": "3000"
   }
 }
