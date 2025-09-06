@@ -113,13 +113,38 @@ stages:
               #     WebAppName: "$(inactiveEnvironment)-nestjs-app"
               #     packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
+              # - task: AzureRmWebAppDeployment@4
+              #   displayName: 'Deploy Application to $(inactiveEnvironment)'
+              #   inputs:
+              #     azureSubscription: 'AzureServicesConnection'
+              #     appType: webApp
+              #     WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
+              #     packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
+
+              # STEP 1: Create a complete ZIP archive of your application
+              # This task zips up the dist folder, node_modules, package.json, etc.
+              - task: ArchiveFiles@2
+                displayName: 'Archive Application for Deployment'
+                inputs:
+                  rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+                  includeRootFolder: false
+                  archiveType: 'zip'
+                  archiveFile: '$(Build.ArtifactStagingDirectory)/application.zip'
+                  replaceExistingArchive: true
+
+              # STEP 2: Deploy the ZIP file to the App Service
               - task: AzureRmWebAppDeployment@4
                 displayName: 'Deploy Application to $(inactiveEnvironment)'
                 inputs:
                   azureSubscription: 'AzureServicesConnection'
-                  appType: webApp
+                  # Use 'webAppLinux' for Linux App Services
+                  appType: 'webAppLinux'
+                  # This name is correct now
                   WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
-                  packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
+                  # Use the 'package' input and point it to the ZIP file
+                  package: '$(Build.ArtifactStagingDirectory)/application.zip'
+                  # Use the 'zipDeploy' method, which is best for "Run From Package"
+                  deploymentMethod: 'zipDeploy'
 
 
 # Stage 2: Switch Traffic Approval
