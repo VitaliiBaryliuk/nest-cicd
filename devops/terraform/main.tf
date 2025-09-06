@@ -51,6 +51,7 @@ resource "azurerm_linux_web_app" "blue_app" {
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
   }
+  startup_command = "node dist/main.js"
 }
 
 # Green App Service
@@ -70,6 +71,7 @@ resource "azurerm_linux_web_app" "green_app" {
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
   }
+  startup_command = "node dist/main.js"
 }
 
 # Traffic Manager Profile
