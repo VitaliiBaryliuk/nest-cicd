@@ -51,6 +51,10 @@ resource "azurerm_linux_web_app" "blue_app" {
     }
   }
 
+  logs {
+    detailed_error_messages = true
+  }
+
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE" = "1"
     "PORT": "3000"
@@ -72,6 +76,10 @@ resource "azurerm_linux_web_app" "green_app" {
     application_stack {
       node_version = "18-lts" # Or a version compatible with your project
     }
+  }
+
+  logs {
+    detailed_error_messages = true
   }
 
   app_settings = {
