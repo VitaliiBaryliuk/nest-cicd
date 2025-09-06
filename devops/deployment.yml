@@ -121,29 +121,21 @@ stages:
               #     WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
               #     packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
-              # STEP 1: Create a complete ZIP archive of your application
-              # This task zips up the dist folder, node_modules, package.json, etc.
-              - task: ArchiveFiles@2
-                displayName: 'Archive Application for Deployment'
-                inputs:
-                  rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
-                  includeRootFolder: false
-                  archiveType: 'zip'
-                  archiveFile: '$(Build.ArtifactStagingDirectory)/application.zip'
-                  replaceExistingArchive: true
+              - script: |
+                  echo "Archiving application using 7-Zip..."
+                  rem The 'a' command adds to an archive. '-tzip' specifies the zip format.
+                  rem We explicitly list what to include for a clean package.
+                  7z a -tzip "$(Build.ArtifactStagingDirectory)/application.zip" ".\dist" ".\node_modules" ".\package.json" ".\package-lock.json"
+                displayName: 'Archive Application with 7-Zip'
 
-              # STEP 2: Deploy the ZIP file to the App Service
               - task: AzureRmWebAppDeployment@4
                 displayName: 'Deploy Application to $(inactiveEnvironment)'
                 inputs:
+                  # ... your other inputs are correct
                   azureSubscription: 'AzureServicesConnection'
-                  # Use 'webAppLinux' for Linux App Services
                   appType: 'webAppLinux'
-                  # This name is correct now
                   WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
-                  # Use the 'package' input and point it to the ZIP file
                   package: '$(Build.ArtifactStagingDirectory)/application.zip'
-                  # Use the 'zipDeploy' method, which is best for "Run From Package"
                   deploymentMethod: 'zipDeploy'
 
 
