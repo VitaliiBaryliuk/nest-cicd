@@ -138,12 +138,18 @@ stages:
                   archiveFile: '$(Build.ArtifactStagingDirectory)/application.zip'
                   replaceExistingArchive: true
 
-              - task: PublishPipelineArtifact@1
-                displayName: 'Publish Deployment Artifact'
+              - task: AzureRmWebAppDeployment@4
+                displayName: 'Deploy Application to $(inactiveEnvironment)'
                 inputs:
-                  targetPath: '$(Build.ArtifactStagingDirectory)/application.zip'
-                  artifact: 'application_package'
-                  publishLocation: 'Container'                  
+                  azureSubscription: 'AzureServicesConnection'
+                  # Specify 'webAppLinux' for your Linux App Service
+                  appType: 'webAppLinux'
+                  # Ensure the name matches your Terraform resource exactly
+                  WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
+                  # Point to the zip file created by the ArchiveFiles task
+                  package: '$(Build.ArtifactStagingDirectory)/application.zip'
+                  # Use 'zipDeploy' as the method, which works best with the App Service platform
+                  deploymentMethod: 'zipDeploy'               
 
 
 
