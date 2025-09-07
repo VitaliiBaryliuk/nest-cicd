@@ -61,6 +61,7 @@ resource "azurerm_linux_web_app" "blue_app" {
   app_settings = {
     # "WEBSITE_RUN_FROM_PACKAGE" = "0"
     "PORT": "3000"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
   }
 }
 
@@ -91,6 +92,7 @@ resource "azurerm_linux_web_app" "green_app" {
   app_settings = {
     # "WEBSITE_RUN_FROM_PACKAGE" = "0"
     "PORT": "3000"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
   }
 }
 
