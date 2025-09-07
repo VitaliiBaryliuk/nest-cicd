@@ -150,6 +150,8 @@ resource "azurerm_traffic_manager_external_endpoint" "green_endpoint" {
 
 # Bind the Traffic Manager hostname to the BLUE app
 resource "azurerm_app_service_custom_hostname_binding" "blue_binding" {
+  count = var.active_app == "blue" ? 1 : 0
+
   hostname            = azurerm_traffic_manager_profile.test_profile.fqdn
   app_service_name    = azurerm_linux_web_app.blue_app.name
   resource_group_name = azurerm_resource_group.rg.name
@@ -157,6 +159,8 @@ resource "azurerm_app_service_custom_hostname_binding" "blue_binding" {
 
 # Bind the Traffic Manager hostname to the GREEN app
 resource "azurerm_app_service_custom_hostname_binding" "green_binding" {
+  count = var.active_app == "green" ? 1 : 0
+  
   hostname            = azurerm_traffic_manager_profile.test_profile.fqdn
   app_service_name    = azurerm_linux_web_app.green_app.name
   resource_group_name = azurerm_resource_group.rg.name

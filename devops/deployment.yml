@@ -44,11 +44,6 @@ stages:
                   dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
                 displayName: "Build Application"
 
-              # - script: |
-              #     echo "Checking dist folder content..."
-              #     dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
-              #   displayName: "Verify dist Folder"  
-
               - script: |
                   az login
                   az account show
@@ -103,23 +98,6 @@ stages:
                 env:
                   ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
                 displayName: 'Provision Infrastructure'
-
-              # # Step 6: Deploy Application to Inactive Environment
-              # - task: AzureRmWebAppDeployment@4
-              #   displayName: 'Deploy Application to $(inactiveEnvironment)'
-              #   inputs:
-              #     azureSubscription: 'AzureServicesConnection'  # Replace with your Azure DevOps service connection
-              #     appType: webApp
-              #     WebAppName: "$(inactiveEnvironment)-nestjs-app"
-              #     packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
-
-              # - task: AzureRmWebAppDeployment@4
-              #   displayName: 'Deploy Application to $(inactiveEnvironment)'
-              #   inputs:
-              #     azureSubscription: 'AzureServicesConnection'
-              #     appType: webApp
-              #     WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
-              #     packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
               - script: |
                   echo "Removing node_modules to create a clean deployment package..."
