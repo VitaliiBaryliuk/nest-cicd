@@ -154,15 +154,16 @@ stages:
 
 
 
+
 # Stage 2: Switch Traffic Approval
 - stage: approval_stage
   displayName: 'Approval: Switch Traffic or Rollback'
   dependsOn: deploy_initial
   jobs:
-    # Step 1: Manual Validation (Server Job)
-    - job: approval_job  # Server job for manual validation
+    # Step 1: Manual Validation (This job remains the same)
+    - job: approval_job
       displayName: 'Manual Approval for Traffic Switch'
-      pool: server  # Server job does not use an agent
+      pool: server
       steps:
         - task: ManualValidation@0
           timeoutInMinutes: 1440
@@ -173,37 +174,52 @@ stages:
               Approve to **switch traffic to $(inactiveEnvironment)**.
               Reject to **keep traffic on $(activeEnvironment)** (rollback).
             notifyUsers: ''
-          displayName: 'Approval Step for Traffic Switching'
 
-    # Step 2: Execute Traffic Updates Based on Approval (Agent Job)
-    - job: execute_traffic_job
-      displayName: 'Execute Traffic Switch or Rollback'
-      dependsOn: approval_job  # Depends on ManualValidation outcome
-      pool: 'SelfHostedPool'  # Replace with your agent pool for Terraform scripts
+    # --- CORRECTED STRUCTURE STARTS HERE ---
+
+    # Step 2a: Job to run ONLY IF APPROVED
+    - job: execute_traffic_switch
+      displayName: 'Execute Traffic Switch'
+      dependsOn: approval_job
+      # This job-level condition IS VALID and checks the result of the approval job
+      condition: succeeded('approval_job')
+      pool: 'SelfHostedPool'
       steps:
         # Re-authenticate to Azure before applying Terraform
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
-            scriptType: bash
-            scriptLocation: inlineScript
-            inlineScript: |
-              echo "Re-authenticated to Azure CLI"
-          displayName: 'Authenticate with Azure CLI for Traffic Updates'
+            azureSubscription: 'AzureServicesConnection'
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: 'echo "Re-authenticated to Azure CLI for Traffic Switch"'
+          displayName: 'Authenticate with Azure CLI'
         
-        # Apply Traffic Update if Approved
+        # Apply Traffic Update - No condition needed on the step itself
         - script: |
-            echo "Switching traffic to $(inactiveEnvironment)..."
-            terraform plan -var="active_app=$(inactiveEnvironment)" -out=tfplan
+            echo "Approval received. Switching traffic to $(inactiveEnvironment)..."
+            cd $(System.DefaultWorkingDirectory)/devops/terraform
+            terraform init -input=false
+            terraform plan -var="active_app=$(inactiveEnvironment)" -out=tfplan -input=false
             terraform apply -auto-approve tfplan
-          displayName: 'Apply Traffic Updates'
-          condition: succeeded(dependencies.approval_job)  # Run if ManualValidation was approved
+          displayName: 'Apply Traffic Switch'
 
-        # Rollback Decision if Rejected
+    # Step 2b: Job to run ONLY IF REJECTED
+    - job: execute_rollback
+      displayName: 'Confirm Rollback'
+      dependsOn: approval_job
+      # This job-level condition IS VALID and runs when the approval is rejected
+      condition: failed('approval_job')
+      pool: 'SelfHostedPool' # Can be server or an agent pool
+      steps:
         - script: |
-            echo "Rollback triggered: Retaining traffic on $(activeEnvironment)..."
-          displayName: 'Rollback Traffic Decision'
-          condition: failed(dependencies.approval_job)  # Run if ManualValidation was rejected
+            echo "Approval was rejected. Rollback confirmed."
+            echo "Traffic remains on $(activeEnvironment)."
+          displayName: 'Log Rollback Confirmation'
+
+
+
+
+
 
 # Stage 3: Finalize Deployment or Confirm Rollback
 - stage: finalize_stage
