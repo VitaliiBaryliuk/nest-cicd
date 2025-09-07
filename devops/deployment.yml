@@ -165,13 +165,19 @@ stages:
       pool: 'SelfHostedPool'
       steps:
         # Re-authenticate to Azure before applying Terraform
-        - task: AzureCLI@2
-          inputs:
-            azureSubscription: 'AzureServicesConnection'
-            scriptType: 'bash'
-            scriptLocation: 'inlineScript'
-            inlineScript: 'echo "Re-authenticated to Azure CLI for Traffic Switch"'
-          displayName: 'Authenticate with Azure CLI'
+        # - task: AzureCLI@2
+        #   inputs:
+        #     azureSubscription: 'AzureServicesConnection'
+        #     scriptType: 'bash'
+        #     scriptLocation: 'inlineScript'
+        #     inlineScript: 'echo "Re-authenticated to Azure CLI for Traffic Switch"'
+        #   displayName: 'Authenticate with Azure CLI'
+        - script: |
+            az login
+            az account show
+            az account get-access-token
+            echo "Authentication complete"
+          displayName: "Debug Azure CLI Authentication"
         
         # Apply Traffic Update - No condition needed on the step itself
         - script: |
