@@ -184,6 +184,15 @@ stages:
             echo "Approval received. Switching traffic to $(inactiveEnvironment)..."
             cd $(System.DefaultWorkingDirectory)/devops/terraform
             terraform init -input=false
+            terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
+            terraform import azurerm_service_plan.blue_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/blue-service-plan
+            terraform import azurerm_service_plan.green_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/green-service-plan
+            terraform import azurerm_linux_web_app.blue_app /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app
+            terraform import azurerm_linux_web_app.green_app /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/green-nestjs-cicd-app
+            terraform import azurerm_traffic_manager_external_endpoint.blue_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/blue-endpoint
+            terraform import azurerm_traffic_manager_external_endpoint.green_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/green-endpoint
+            terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
+            terraform import azurerm_app_service_custom_hostname_binding.blue_binding[0] /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app/hostNameBindings/nestjs-cicd-traffic-manager.trafficmanager.net
             terraform plan -var="active_app_environment=$(inactiveEnvironment)" -out=tfplan -input=false
             terraform apply -auto-approve tfplan
           displayName: 'Apply Traffic Switch'
