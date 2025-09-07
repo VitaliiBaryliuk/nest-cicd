@@ -121,10 +121,10 @@ stages:
               #     WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
               #     packageForLinux: "$(System.DefaultWorkingDirectory)/dist"
 
-              - script: |
-                  echo "Removing node_modules to create a clean deployment package..."
-                  rd /s /q node_modules
-                displayName: 'Remove node_modules for Packaging'
+              # - script: |
+              #     echo "Removing node_modules to create a clean deployment package..."
+              #     rd /s /q node_modules
+              #   displayName: 'Remove node_modules for Packaging'
 
               # STEP 3: Archive everything ELSE using the standard task
               # This will now succeed because the problematic node_modules folder is gone.
