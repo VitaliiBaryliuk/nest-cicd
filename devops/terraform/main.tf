@@ -22,7 +22,7 @@ resource "azurerm_service_plan" "blue_plan" {
   name                = "blue-service-plan"
   location            = "northeurope"
   resource_group_name = azurerm_resource_group.rg.name
-  sku_name            = "F1" # Free Tier Plan
+  sku_name            = "B1" # Free Tier Plan
   os_type             = "Linux"
 }
 
@@ -30,7 +30,7 @@ resource "azurerm_service_plan" "green_plan" {
   name                = "green-service-plan"
   location            = "northeurope"
   resource_group_name = azurerm_resource_group.rg.name
-  sku_name            = "F1" # Free Tier Plan
+  sku_name            = "B1" # Free Tier Plan
   os_type             = "Linux"
 }
 
