@@ -138,15 +138,14 @@ stages:
                   archiveFile: '$(Build.ArtifactStagingDirectory)/application.zip'
                   replaceExistingArchive: true
 
-
-              - task: ArchiveFiles@2
-                displayName: 'Archive Application Source for Deployment'
+              - task: PublishPipelineArtifact@1
+                displayName: 'Publish Deployment Artifact'
                 inputs:
-                  rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
-                  includeRootFolder: false
-                  archiveType: 'zip'
-                  archiveFile: '$(Build.ArtifactStagingDirectory)/application.zip'
-                  replaceExistingArchive: true
+                  targetPath: '$(Build.ArtifactStagingDirectory)/application.zip'
+                  artifact: 'application_package'
+                  publishLocation: 'Container'                  
+
+
 
 
 # Stage 2: Switch Traffic Approval
