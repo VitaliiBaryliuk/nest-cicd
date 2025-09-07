@@ -92,6 +92,7 @@ stages:
                   terraform import azurerm_traffic_manager_external_endpoint.blue_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/blue-endpoint
                   terraform import azurerm_traffic_manager_external_endpoint.green_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/green-endpoint
                   terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
+                  terraform import azurerm_app_service_custom_hostname_binding.blue_binding[0] /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app/hostNameBindings/nestjs-cicd-traffic-manager.trafficmanager.net
                   terraform refresh
                   terraform plan -var="active_app_environment=%inactiveEnvironment%" -out=tfplan
                   terraform apply -auto-approve tfplan
