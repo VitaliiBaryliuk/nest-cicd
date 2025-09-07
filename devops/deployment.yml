@@ -98,7 +98,7 @@ stages:
                   terraform import azurerm_traffic_manager_external_endpoint.green_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/green-endpoint
                   terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
                   terraform refresh
-                  terraform plan -var="active_app=%inactiveEnvironment%" -out=tfplan
+                  terraform plan -var="active_app_environment=%inactiveEnvironment%" -out=tfplan
                   terraform apply -auto-approve tfplan
                 env:
                   ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
@@ -199,7 +199,7 @@ stages:
             echo "Approval received. Switching traffic to $(inactiveEnvironment)..."
             cd $(System.DefaultWorkingDirectory)/devops/terraform
             terraform init -input=false
-            terraform plan -var="active_app=$(inactiveEnvironment)" -out=tfplan -input=false
+            terraform plan -var="active_app_environment=$(inactiveEnvironment)" -out=tfplan -input=false
             terraform apply -auto-approve tfplan
           displayName: 'Apply Traffic Switch'
 
@@ -247,7 +247,7 @@ stages:
                   echo "Finalizing deployment based on approval."
                   if [ "$(approval.status)" = "approved" ]; then
                     echo "Syncing inactive environment $(activeEnvironment) with new application version."
-                    terraform plan -var="active_app=$(activeEnvironment)" -out=tfplan
+                    terraform plan -var="active_app_environment=$(activeEnvironment)" -out=tfplan
                     terraform apply -auto-approve tfplan
                   else
                     echo "Rollback confirmed. No additional changes to environments."

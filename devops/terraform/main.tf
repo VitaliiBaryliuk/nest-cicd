@@ -122,6 +122,7 @@ resource "azurerm_traffic_manager_external_endpoint" "blue_endpoint" {
   target     = azurerm_linux_web_app.blue_app.default_hostname
   priority            = 1
   weight              = 100
+  enabled = var.active_app_environment == "blue"
 
   # Ensure this depends on both the App Service (blue_app) and Traffic Manager profile
   depends_on = [
@@ -138,6 +139,7 @@ resource "azurerm_traffic_manager_external_endpoint" "green_endpoint" {
   target     = azurerm_linux_web_app.green_app.default_hostname
   priority            = 2
   weight              = 50
+  enabled = var.active_app_environment == "green"
 
   # Ensure this depends on both the App Service (green_app) and Traffic Manager profile
   depends_on = [
@@ -146,23 +148,20 @@ resource "azurerm_traffic_manager_external_endpoint" "green_endpoint" {
   ]
 }
 
-# # Blue Endpoint
-# resource "azurerm_traffic_manager_external_endpoint" "blue_endpoint" {
-#   name       = "blue-endpoint"
-#   profile_id = azurerm_traffic_manager_profile.test_profile.id
-#   target     = azurerm_linux_web_app.blue_app.default_hostname  # Default DNS for Blue App Service
-#   priority   = 1
-#   weight     = 100
-# }
+# Bind the Traffic Manager hostname to the BLUE app
+resource "azurerm_app_service_custom_hostname_binding" "blue_binding" {
+  hostname            = azurerm_traffic_manager_profile.test_profile.fqdn
+  app_service_name    = azurerm_linux_web_app.blue_app.name
+  resource_group_name = azurerm_resource_group.rg.name
+}
 
-# # Green Endpoint
-# resource "azurerm_traffic_manager_external_endpoint" "green_endpoint" {
-#   name       = "green-endpoint"
-#   profile_id = azurerm_traffic_manager_profile.test_profile.id
-#   target     = azurerm_linux_web_app.green_app.default_hostname  # Default DNS for Green App Service
-#   priority   = 2
-#   weight     = 100
-# }
+# Bind the Traffic Manager hostname to the GREEN app
+resource "azurerm_app_service_custom_hostname_binding" "green_binding" {
+  hostname            = azurerm_traffic_manager_profile.test_profile.fqdn
+  app_service_name    = azurerm_linux_web_app.green_app.name
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
 
 output "blue_app_hostname" {
   value = azurerm_linux_web_app.blue_app.default_hostname
