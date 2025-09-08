@@ -155,6 +155,10 @@ resource "azurerm_app_service_custom_hostname_binding" "blue_binding" {
   hostname            = azurerm_traffic_manager_profile.test_profile.fqdn
   app_service_name    = azurerm_linux_web_app.blue_app.name
   resource_group_name = azurerm_resource_group.rg.name
+
+  depends_on = [
+    azurerm_traffic_manager_external_endpoint.blue_endpoint
+  ]
 }
 
 # Bind the Traffic Manager hostname to the GREEN app
@@ -164,6 +168,10 @@ resource "azurerm_app_service_custom_hostname_binding" "green_binding" {
   hostname            = azurerm_traffic_manager_profile.test_profile.fqdn
   app_service_name    = azurerm_linux_web_app.green_app.name
   resource_group_name = azurerm_resource_group.rg.name
+
+  depends_on = [
+    azurerm_traffic_manager_external_endpoint.green_endpoint
+  ]
 }
 
 
