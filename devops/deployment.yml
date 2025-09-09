@@ -187,12 +187,52 @@ stages:
             terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
             terraform import azurerm_app_service_custom_hostname_binding.blue_binding[0] /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app/hostNameBindings/nestjs-cicd-traffic-manager.trafficmanager.net
 
-            echo "--- STAGE 1: Switching Traffic Manager Endpoints ONLY ---"
+            # echo "--- STAGE 1: Switching Traffic Manager Endpoints ONLY ---"
+            # terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" -target=azurerm_traffic_manager_external_endpoint.blue_endpoint -target=azurerm_traffic_manager_external_endpoint.green_endpoint
+            # echo "Waiting 60 seconds for Azure to process endpoint changes..."
+            # Start-Sleep -Seconds 60
+            # echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
+            # terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
+            # echo "Traffic switch complete."
+
+                        # --- DIAGNOSTIC SCRIPT ---
+
+            # Define your resource names here
+            $resourceGroup = "nestjs-cicd-prod-rg"
+            $tmProfileName = "nestjs-cicd-traffic-manager"
+
+            echo "Approval received. Beginning two-stage traffic switch to $(inactiveEnvironment)..."
+            
+            cd $(System.DefaultWorkingDirectory)/devops/terraform
+            
+            terraform init -input=false
+            
+            echo "--- DIAGNOSTIC: Checking initial endpoint status ---"
+            $initialStatus = az network traffic-manager endpoint show --name "blue-endpoint" --profile-name $tmProfileName --resource-group $resourceGroup --type externalEndpoints --query enabled
+            echo "Initial status of blue-endpoint: $initialStatus"
+            
+            echo "--- STAGE 1: Attempting to switch Traffic Manager Endpoints ONLY ---"
             terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" -target=azurerm_traffic_manager_external_endpoint.blue_endpoint -target=azurerm_traffic_manager_external_endpoint.green_endpoint
-            echo "Waiting 60 seconds for Azure to process endpoint changes..."
+
+            echo "--- DIAGNOSTIC: Checking endpoint status IMMEDIATELY after first apply ---"
+            $postApplyStatus = az network traffic-manager endpoint show --name "blue-endpoint" --profile-name $tmProfileName --resource-group $resourceGroup --type externalEndpoints --query enabled
+            echo "Status of blue-endpoint after apply: $postApplyStatus"
+
+            if ($postApplyStatus -ne "false") {
+              echo "##[error]CRITICAL FAILURE: The first terraform apply did NOT disable the blue-endpoint. Azure still reports it as enabled. Aborting."
+              exit 1 # Fail the pipeline here
+            }
+
+            echo "Waiting 60 seconds for Azure to process the endpoint change..."
             Start-Sleep -Seconds 60
+            
+            echo "--- DIAGNOSTIC: Planning the second stage ---"
+            # Let's see what Terraform plans to do now that the endpoint is (supposedly) disabled.
+            terraform plan -var="active_app_environment=$(inactiveEnvironment)" -input=false
+
             echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
             terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
+            
             echo "Traffic switch complete."
           displayName: "Switch Traffic"
 
