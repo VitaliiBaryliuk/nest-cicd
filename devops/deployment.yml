@@ -194,6 +194,24 @@ stages:
             terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
             terraform import azurerm_app_service_custom_hostname_binding.blue_binding[0] /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app/hostNameBindings/nestjs-cicd-traffic-manager.trafficmanager.net
             terraform plan -var="active_app_environment=$(inactiveEnvironment)" -out=tfplan -input=false
+
+            echo "--- STAGE 1: Switching Traffic Manager Endpoints ONLY ---"
+            # Apply changes only to the Traffic Manager endpoints.
+            # This will disable the old endpoint, which unlocks the hostname binding.
+            terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" `
+              -target=azurerm_traffic_manager_external_endpoint.blue_endpoint `
+              -target=azurerm_traffic_manager_external_endpoint.green_endpoint
+
+            # A pause is CRITICAL to let Azure's control plane process the change.
+            echo "Waiting 30 seconds for Azure to process endpoint changes..."
+            Start-Sleep -Seconds 30
+            
+            echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
+            # This second apply will now succeed because the lock is gone.
+            terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
+            
+            echo "Traffic switch complete."
+
             terraform apply -auto-approve tfplan
           displayName: 'Apply Traffic Switch'
 
