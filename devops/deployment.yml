@@ -189,8 +189,8 @@ stages:
 
             echo "--- STAGE 1: Switching Traffic Manager Endpoints ONLY ---"
             terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" -target=azurerm_traffic_manager_external_endpoint.blue_endpoint -target=azurerm_traffic_manager_external_endpoint.green_endpoint
-            echo "Waiting 30 seconds for Azure to process endpoint changes..."
-            Start-Sleep -Seconds 30
+            echo "Waiting 60 seconds for Azure to process endpoint changes..."
+            Start-Sleep -Seconds 60
             echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
             terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
             echo "Traffic switch complete."
