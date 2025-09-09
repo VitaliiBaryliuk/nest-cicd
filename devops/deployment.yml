@@ -171,23 +171,19 @@ stages:
             echo "Authentication complete"
           displayName: "Azure CLI Authentication"
 
-        - task: AzureCLI@2
-          displayName: 'Authenticate and Perform Two-Stage Traffic Switch'
-          inputs:
-            azureSubscription: 'AzureServicesConnection'
-            scriptType: 'pwsh'
-            inlineScript: |
-              # This is the robust two-stage apply script we finalized
-              echo "Approval received. Beginning two-stage traffic switch to $(inactiveEnvironment)..."
-              cd $(System.DefaultWorkingDirectory)/devops/terraform
-              terraform init -input=false
-              echo "--- STAGE 1: Switching Traffic Manager Endpoints ONLY ---"
-              terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" -target=azurerm_traffic_manager_external_endpoint.blue_endpoint -target=azurerm_traffic_manager_external_endpoint.green_endpoint
-              echo "Waiting 30 seconds for Azure to process endpoint changes..."
-              Start-Sleep -Seconds 30
-              echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
-              terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
-              echo "Traffic switch complete."
+        - script: |
+            # This is the robust two-stage apply script we finalized
+            echo "Approval received. Beginning two-stage traffic switch to $(inactiveEnvironment)..."
+            cd $(System.DefaultWorkingDirectory)/devops/terraform
+            terraform init -input=false
+            echo "--- STAGE 1: Switching Traffic Manager Endpoints ONLY ---"
+            terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" -target=azurerm_traffic_manager_external_endpoint.blue_endpoint -target=azurerm_traffic_manager_external_endpoint.green_endpoint
+            echo "Waiting 30 seconds for Azure to process endpoint changes..."
+            Start-Sleep -Seconds 30
+            echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
+            terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
+            echo "Traffic switch complete."
+          displayName: "Switch Traffic"
 
         # - script: |
         #     az login
