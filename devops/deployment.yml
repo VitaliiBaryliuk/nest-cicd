@@ -49,7 +49,7 @@ stages:
                   az account show
                   az account get-access-token
                   echo "Authentication complete"
-                displayName: "Debug Azure CLI Authentication"
+                displayName: "Azure CLI Authentication"
 
               # Step 3: Debug Working Directory (Windows Compatible)
               - script: |
@@ -169,7 +169,7 @@ stages:
             az account show
             az account get-access-token
             echo "Authentication complete"
-          displayName: "Debug Azure CLI Authentication"
+          displayName: "Azure CLI Authentication"
 
         - task: AzureCLI@2
           displayName: 'Authenticate and Perform Two-Stage Traffic Switch'
