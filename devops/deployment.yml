@@ -56,6 +56,13 @@ stages:
         command: 'validate'
 
     - script: |
+        az login
+        az account show
+        az account get-access-token
+        echo "Authentication complete"
+      displayName: "Azure CLI Authentication"        
+
+    - script: |
         cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
         terraform init
         terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
