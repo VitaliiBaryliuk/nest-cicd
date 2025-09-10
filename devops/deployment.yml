@@ -17,6 +17,7 @@ variables:
   poolName: 'SelfHostedPool'
   environmentName: 'nest-cicd-prod'
   nodeVersion: '20.x'
+  terraformVersion: 'latest'
 
 stages:
 # STAGE 1: PROVISION INFRASTRUCTURE WITH TERRAFORM
