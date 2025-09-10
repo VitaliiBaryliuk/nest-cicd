@@ -80,7 +80,7 @@ stages:
 # STAGE 3: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
   displayName: 'Swap to Production'
-  dependsOn: Test_Staging # Only swap if tests pass
+  dependsOn: Deploy_to_Staging
   condition: succeeded()
   jobs:
   - deployment: SwapProduction
