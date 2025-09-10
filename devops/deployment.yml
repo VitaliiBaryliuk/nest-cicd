@@ -63,9 +63,10 @@ stages:
         echo "Authentication complete"
         terraform init
         terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
+        terraform import azurerm_resource_group.rg '/subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg'
       env:
         ARM_SUBSCRIPTION_ID: $(azureSubscription)
-      displayName: 'Provision Infrastructure'        
+      displayName: 'Terraform Resources Imports'        
 
     # Apply the Terraform plan to create/update infrastructure
     # -auto-approve is necessary for non-interactive pipeline execution
