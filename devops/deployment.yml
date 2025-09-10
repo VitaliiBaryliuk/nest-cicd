@@ -4,7 +4,7 @@ trigger:
 - main
 
 variables:
-  azureSubscription: '703d10f6-9dab-4401-ac0f-cade6c18279e'
+  azureSubscription: 'AzureServicesConnection'
   resourceGroupName: 'nestjs-cicd-prod-rg'
   webAppName: 'nestjs_cicd_app'
   stagingSlotName: 'nestjs_cicd_app_slot'
