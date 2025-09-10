@@ -6,7 +6,7 @@ trigger:
 variables:
   azureSubscription: 'AzureServicesConnection'
   resourceGroupName: 'nestjs-cicd-prod-rg'
-  webAppName: 'nestjs_cicd_app'
+  webAppName: 'nestjs-cicd-app'
   stagingSlotName: 'nestjs_cicd_app_slot'
 
   terraformStateRG: 'TerraformStateRG'
