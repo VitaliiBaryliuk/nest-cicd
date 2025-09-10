@@ -67,12 +67,12 @@ stages:
 
                   if "%active_env%"=="blue" (
                       echo Current live environment: Blue
-                      echo ##vso[task.setvariable variable=inactiveEnvironment]green
-                      echo ##vso[task.setvariable variable=activeEnvironment]blue
+                      echo ##vso[task.setvariable variable=inactiveEnvironment;isOutput=true]green
+                      echo ##vso[task.setvariable variable=activeEnvironment;isOutput=true]blue
                   ) else (
                       echo Current live environment: Green
-                      echo ##vso[task.setvariable variable=inactiveEnvironment]blue
-                      echo ##vso[task.setvariable variable=activeEnvironment]green
+                      echo ##vso[task.setvariable variable=inactiveEnvironment;isOutput=true]blue
+                      echo ##vso[task.setvariable variable=activeEnvironment;isOutput=true]green
                   )
                 displayName: 'Set Active/Inactive Environments'
               - task: TerraformInstaller@0
@@ -138,6 +138,9 @@ stages:
 - stage: approval_stage
   displayName: 'Approval: Switch Traffic or Rollback'
   dependsOn: deploy_initial
+  variables:
+    activeEnvironment: $[ stageDependencies.deploy_initial.deploy_initial_job.outputs['TerraformApply.activeEnvironment'] ]
+    inactiveEnvironment: $[ stageDependencies.deploy_initial.deploy_initial_job.outputs['TerraformApply.inactiveEnvironment'] ]
   jobs:
     # Step 1: Manual Validation (This job remains the same)
     - job: approval_job
