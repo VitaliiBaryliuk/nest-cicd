@@ -7,7 +7,7 @@ variables:
   azureSubscription: 'AzureServicesConnection'
   resourceGroupName: 'nestjs-cicd-prod-rg'
   webAppName: 'nestjs-cicd-app'
-  stagingSlotName: 'nestjs_cicd_app_slot'
+  stagingSlotName: 'nestjs-cicd-app-slot'
 
   terraformStateRG: 'TerraformStateRG'
   terraformStateStorage: 'tfstatea9e1466d'
@@ -54,6 +54,17 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'validate'
+
+    - script: |
+        cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
+        terraform init
+        terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
+        terraform refresh
+        terraform plan -out=tfplan
+        terraform apply -auto-approve tfplan
+      env:
+        ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+      displayName: 'Provision Infrastructure'        
 
     # Apply the Terraform plan to create/update infrastructure
     # -auto-approve is necessary for non-interactive pipeline execution

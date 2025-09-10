@@ -1,7 +1,0 @@
-resource_group_name           = "nestjs-cicd-prod-rg"
-azure_location                = "northeurope"
-web_app_service_plan_name     = "nestjs-cicd-app-plan"
-web_app_service_name          = "nestjs-cicd-app"
-web_app_service_slot_name     = "nestjs-cicd-app-slot"
-web_app_service_node_version  = "20-lts"
-web_app_service_logs_level    = "Warning"

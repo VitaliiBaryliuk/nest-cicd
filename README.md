@@ -70,6 +70,23 @@ $ mau deploy
 
 With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
+## Bash Commands to setup Terraform State
+
+# Variables for your Terraform state
+TF_STATE_RG="TerraformStateRG"
+LOCATION="EastUS"
+TF_STATE_STORAGE_ACCOUNT="tfstate$(openssl rand -hex 4)" # Needs to be globally unique
+TF_STATE_CONTAINER="tfstate"
+
+# Create the Resource Group for the state
+az group create --name $TF_STATE_RG --location $LOCATION
+
+# Create the Storage Account
+az storage account create --name $TF_STATE_STORAGE_ACCOUNT --resource-group $TF_STATE_RG --location $LOCATION --sku Standard_LRS --encryption-services blob
+
+# Create the Blob Container
+az storage container create --name $TF_STATE_CONTAINER --account-name $TF_STATE_STORAGE_ACCOUNT
+
 ## Resources
 
 Check out a few resources that may come in handy when working with NestJS:
