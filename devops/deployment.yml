@@ -8,15 +8,68 @@ variables:
   resourceGroupName: 'nestjs-cicd-prod-rg'
   webAppName: 'nestjs_cicd_app'
   stagingSlotName: 'nestjs_cicd_app_slot'
+
+  terraformStateRG: 'TerraformStateRG'
+  terraformStateStorage: 'tfstatea9e1466d'
+  terraformStateContainer: 'tfstate'
+  terraformStateFile: 'nestjs-prod.terraform.tfstate'
   
   poolName: 'SelfHostedPool'
   environmentName: 'nest-cicd-prod'
   nodeVersion: '20.x'
 
 stages:
-# STAGE 1: Build the NestJS Application and create an artifact
+# STAGE 1: PROVISION INFRASTRUCTURE WITH TERRAFORM
+- stage: Provision_Infrastructure
+  displayName: 'Provision Infrastructure'
+  jobs:
+  - job: Terraform_Apply
+    displayName: 'Terraform Apply'
+    pool:
+      name: $(poolName)
+    steps:
+    # This task installs the specified version of Terraform on the agent
+    - task: TerraformInstaller@1
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: $(terraformVersion)
+
+    # Initialize Terraform. This connects to the remote backend.
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Init'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/devops/terraform' # Assumes .tf files are in root
+        backendServiceArm: $(azureSubscription)
+        backendAzureRmResourceGroupName: $(terraformStateRG)
+        backendAzureRmStorageAccountName: $(terraformStateStorage)
+        backendAzureRmContainerName: $(terraformStateContainer)
+        backendAzureRmKey: $(terraformStateFile)
+
+    # Optional but recommended: Validate the Terraform files
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Validate'
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+
+    # Apply the Terraform plan to create/update infrastructure
+    # -auto-approve is necessary for non-interactive pipeline execution
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Apply'
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+        commandOptions: '-auto-approve'
+        environmentServiceNameAzureRM: $(azureSubscription)
+
+# STAGE 2: Build the NestJS Application and create an artifact
 - stage: Build
   displayName: 'Build NestJS App'
+  dependsOn: Provision_Infrastructure
+  condition: succeeded()
   jobs:
   - job: BuildJob
     displayName: 'Build and Archive'
@@ -33,10 +86,19 @@ stages:
         npm run build
       displayName: 'Install Dependencies and Build'
 
+    - script: |
+        mkdir $(Build.ArtifactStagingDirectory)/publish
+        cp -r dist $(Build.ArtifactStagingDirectory)/publish
+        cp package.json $(Build.ArtifactStagingDirectory)/publish
+        cp package-lock.json $(Build.ArtifactStagingDirectory)/publish
+        cd $(Build.ArtifactStagingDirectory)/publish
+        npm install --production
+      displayName: 'Create Clean Production Package'
+
     - task: ArchiveFiles@2
       displayName: 'Archive build output'
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
         includeRootFolder: false
         archiveType: 'zip'
         archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
@@ -49,7 +111,7 @@ stages:
         ArtifactName: 'drop'
         publishLocation: 'Container'
 
-# STAGE 2: Deploy the artifact to the Staging (Green) Slot
+# STAGE 3: Deploy the artifact to the Staging (Green) Slot
 - stage: Deploy_to_Staging
   displayName: 'Deploy to Staging Slot'
   dependsOn: Build
@@ -77,7 +139,7 @@ stages:
               startUpCommand: 'npm start' # Assumes 'start' script in your package.json runs the production server
               appSettings: '-PORT 8080' # App Service injects the correct port, but sets it here for consistency.
 
-# STAGE 3: Swap Staging (Green) with Production (Blue)
+# STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
   displayName: 'Swap to Production'
   dependsOn: Deploy_to_Staging
