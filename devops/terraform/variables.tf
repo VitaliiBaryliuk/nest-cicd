@@ -8,34 +8,27 @@ variable "azure_location" {
   type        = string
 }
 
-variable "blue_app_name" {
-  description = "The name for the blue app service"
+variable "web_app_service_plan_name" {
+  description = "The name of app service plan"
   type        = string
 }
 
-variable "green_app_name" {
-  description = "The name for the green app service"
+variable "web_app_service_name" {
+  description = "The name for the web app service name"
   type        = string
 }
 
-variable "traffic_manager_name" {
-  description = "DNS name for the Traffic Manager"
+variable "web_app_service_slot_name" {
+  description = "The name for the web app slot service name"
   type        = string
 }
 
-variable "active_app_environment" {
-  description = "Determines the currently live environment (blue or green)"
+variable "web_app_service_node_version" {
+  description = "Web app service node version"
   type        = string
 }
 
-variable "dns_zone_name" {
-  description = "The DNS zone name"
+variable "web_app_service_logs_level" {
+  description = "level of logging"
   type        = string
-  default     = "blue-green-tm"
-}
-
-variable "active_app" {
-  description = "The active application environment (blue/green)"
-  type        = string
-  default     = "example.com"
 }

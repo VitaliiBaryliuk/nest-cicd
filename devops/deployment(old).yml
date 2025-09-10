@@ -1,0 +1,351 @@
+name: 'nestjs-blue-green-cicd'
+
+variables:
+  System.Debug: true
+  ARM_SUBSCRIPTION_ID: "703d10f6-9dab-4401-ac0f-cade6c18279e"
+
+stages:
+# Stage 1: Deploy and Test Initial App Environment
+- stage: deploy_initial
+  displayName: 'Deploy and Test Initial App Environment'
+  jobs:
+    - deployment: deploy_initial_job
+      displayName: 'Deploy to Inactive Environment'
+      environment: 'nest-cicd-prod'  # Ensure this environment exists in Azure DevOps
+      pool:
+        name: 'SelfHostedPool'  # Use your self-hosted Windows agent pool
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+
+              # Step 1: Checkout Repository
+              - checkout: self
+              - script: |
+                  echo "Checking Azure CLI Version..."
+                  az --version
+                displayName: "Check Azure CLI Version"
+
+              # Step 2: Installing dependencies...
+              - script: |
+                  echo "Installing dependencies..."
+                  npm install
+                  echo "Building NestJS application..."
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                  npm run build
+                  echo "After Build"
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                displayName: "Installing dependencies"
+
+              # Step 2.2: Build the Application
+              - script: |
+                  npm run build
+                  echo "After Build"
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                displayName: "Build Application"
+
+              - script: |
+                  az login
+                  az account show
+                  az account get-access-token
+                  echo "Authentication complete"
+                displayName: "Azure CLI Authentication"
+
+              # Step 3: Debug Working Directory (Windows Compatible)
+              - script: |
+                  echo Debugging working directory
+                  echo System Default Working Directory: %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%
+                  dir %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
+                displayName: 'Debug Working Directory'
+
+              - task: AzureCLI@2
+                displayName: 'et Active/Inactive Environments'
+                name: 'TerraformApply'
+                inputs:
+                  azureSubscription: 'AzureServicesConnection'
+                  scriptType: 'pwsh'
+                  inlineScript: |
+                    # ... your terraform apply and logic here ...
+                    $activeEnv = terraform output -raw active_app_environment
+                    if ($activeEnv -eq "blue") {
+                        # Add isOutput=true to make it available to other stages
+                        echo "##vso[task.setvariable variable=inactiveEnvironment;isOutput=true]green"
+                        echo "##vso[task.setvariable variable=activeEnvironment;isOutput=true]blue"
+                    } else {
+                        echo "##vso[task.setvariable variable=inactiveEnvironment;isOutput=true]blue"
+                        echo "##vso[task.setvariable variable=activeEnvironment;isOutput=true]green"
+                    }  
+
+              # # Step 4: Determine Active/Inactive Environments
+              # - script: |
+              #     echo Determining inactive environment...
+              #     cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
+              #     for /f "delims=" %%a in ('terraform output active_app_environment') do set active_env=%%a
+
+              #     if "%active_env%"=="blue" (
+              #         echo Current live environment: Blue
+              #         echo ##vso[task.setvariable variable=inactiveEnvironment;isOutput=true]green
+              #         echo ##vso[task.setvariable variable=activeEnvironment;isOutput=true]blue
+              #     ) else (
+              #         echo Current live environment: Green
+              #         echo ##vso[task.setvariable variable=inactiveEnvironment;isOutput=true]blue
+              #         echo ##vso[task.setvariable variable=activeEnvironment;isOutput=true]green
+              #     )
+              #   displayName: 'Set Active/Inactive Environments'
+              # - task: TerraformInstaller@0
+              #   inputs:
+              #     terraformVersion: "latest"
+
+              # Step 5: Provision Infrastructure Using Terraform
+              - script: |
+                  echo Provisioning infrastructure using Terraform...
+                  cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
+                  terraform init
+                  terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
+                  terraform import azurerm_service_plan.blue_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/blue-service-plan
+                  terraform import azurerm_service_plan.green_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/green-service-plan
+                  terraform import azurerm_linux_web_app.blue_app /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app
+                  terraform import azurerm_linux_web_app.green_app /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/green-nestjs-cicd-app
+                  terraform import azurerm_traffic_manager_external_endpoint.blue_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/blue-endpoint
+                  terraform import azurerm_traffic_manager_external_endpoint.green_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/green-endpoint
+                  terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
+                  terraform import azurerm_app_service_custom_hostname_binding.blue_binding[0] /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app/hostNameBindings/nestjs-cicd-traffic-manager.trafficmanager.net
+                  terraform refresh
+                  terraform plan -var="active_app_environment=%inactiveEnvironment%" -out=tfplan
+                  terraform apply -auto-approve tfplan
+                env:
+                  ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+                displayName: 'Provision Infrastructure'
+
+              - script: |
+                  echo "Removing node_modules to create a clean deployment package..."
+                  rd /s /q node_modules
+                displayName: 'Remove node_modules for Packaging'
+
+              # STEP 3: Archive everything ELSE using the standard task
+              # This will now succeed because the problematic node_modules folder is gone.
+              # The archive will contain 'dist', 'package.json', 'package-lock.json', etc.
+              - task: ArchiveFiles@2
+                displayName: 'Archive Application Source for Deployment'
+                inputs:
+                  rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+                  includeRootFolder: false
+                  archiveType: 'zip'
+                  archiveFile: '$(Build.ArtifactStagingDirectory)/application.zip'
+                  replaceExistingArchive: true
+
+              - task: AzureRmWebAppDeployment@4
+                displayName: 'Deploy Application to $(inactiveEnvironment)'
+                inputs:
+                  azureSubscription: 'AzureServicesConnection'
+                  # Specify 'webAppLinux' for your Linux App Service
+                  appType: 'webAppLinux'
+                  # Ensure the name matches your Terraform resource exactly
+                  WebAppName: "$(inactiveEnvironment)-nestjs-cicd-app"
+                  # Point to the zip file created by the ArchiveFiles task
+                  package: '$(Build.ArtifactStagingDirectory)/application.zip'
+                  # Use 'zipDeploy' as the method, which works best with the App Service platform
+                  deploymentMethod: 'zipDeploy'               
+
+
+
+
+
+# Stage 2: Switch Traffic Approval
+- stage: approval_stage
+  displayName: 'Approval: Switch Traffic or Rollback'
+  dependsOn: deploy_initial
+  variables:
+    activeEnvironment: $[ stageDependencies.deploy_initial.deploy_initial_job.outputs['TerraformApply.activeEnvironment'] ]
+    inactiveEnvironment: $[ stageDependencies.deploy_initial.deploy_initial_job.outputs['TerraformApply.inactiveEnvironment'] ]
+  jobs:
+    # Step 1: Manual Validation (This job remains the same)
+    - job: approval_job
+      displayName: 'Manual Approval for Traffic Switch'
+      pool: server
+      steps:
+        - task: ManualValidation@0
+          timeoutInMinutes: 1440
+          inputs:
+            instructions: |
+              Current live environment: $(activeEnvironment)
+              New deployment: $(inactiveEnvironment)
+              Approve to **switch traffic to $(inactiveEnvironment)**.
+              Reject to **keep traffic on $(activeEnvironment)** (rollback).
+            notifyUsers: ''
+
+    # --- CORRECTED STRUCTURE STARTS HERE ---
+
+    # Step 2a: Job to run ONLY IF APPROVED
+    - job: execute_traffic_switch
+      displayName: 'Execute Traffic Switch'
+      dependsOn: approval_job
+      # This job-level condition IS VALID and checks the result of the approval job
+      condition: succeeded('approval_job')
+      pool: 'SelfHostedPool'
+      steps:
+        - powershell: |
+            az login
+            az account show
+            az account get-access-token
+            echo "Authentication complete"
+          displayName: "Azure CLI Authentication"
+
+        - powershell: |
+            # This is the robust two-stage apply script we finalized
+            echo "Approval received. Beginning two-stage traffic switch to $(inactiveEnvironment)..."
+            cd $(System.DefaultWorkingDirectory)/devops/terraform
+            terraform init -input=false
+
+            terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
+            terraform import azurerm_service_plan.blue_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/blue-service-plan
+            terraform import azurerm_service_plan.green_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/green-service-plan
+            terraform import azurerm_linux_web_app.blue_app /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app
+            terraform import azurerm_linux_web_app.green_app /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/green-nestjs-cicd-app
+            terraform import azurerm_traffic_manager_external_endpoint.blue_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/blue-endpoint
+            terraform import azurerm_traffic_manager_external_endpoint.green_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/green-endpoint
+            terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
+            terraform import azurerm_app_service_custom_hostname_binding.blue_binding[0] /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app/hostNameBindings/nestjs-cicd-traffic-manager.trafficmanager.net
+
+            echo "--- STAGE 1: Switching Traffic Manager Endpoints ONLY ---"
+            terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" -target=azurerm_traffic_manager_external_endpoint.blue_endpoint -target=azurerm_traffic_manager_external_endpoint.green_endpoint
+            echo "Waiting 120 seconds for Azure to process endpoint changes..."
+            Start-Sleep -Seconds 120
+            echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
+            terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
+            echo "Traffic switch complete."
+
+            #             # --- DIAGNOSTIC SCRIPT ---
+
+            # # Define your resource names here
+            # $resourceGroup = "nestjs-cicd-prod-rg"
+            # $tmProfileName = "nestjs-cicd-traffic-manager"
+
+            # echo "Approval received. Beginning two-stage traffic switch to $(inactiveEnvironment)..."
+            
+            # cd $(System.DefaultWorkingDirectory)/devops/terraform
+            
+            # terraform init -input=false
+            
+            # echo "--- DIAGNOSTIC: Checking initial endpoint status ---"
+            # $initialStatus = az network traffic-manager endpoint show --name "blue-endpoint" --profile-name $tmProfileName --resource-group $resourceGroup --type externalEndpoints --query enabled
+            # echo "Initial status of blue-endpoint: $initialStatus"
+            
+            # echo "--- STAGE 1: Attempting to switch Traffic Manager Endpoints ONLY ---"
+            # terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" -target=azurerm_traffic_manager_external_endpoint.blue_endpoint -target=azurerm_traffic_manager_external_endpoint.green_endpoint
+
+            # echo "--- DIAGNOSTIC: Checking endpoint status IMMEDIATELY after first apply ---"
+            # $postApplyStatus = az network traffic-manager endpoint show --name "blue-endpoint" --profile-name $tmProfileName --resource-group $resourceGroup --type externalEndpoints --query enabled
+            # echo "Status of blue-endpoint after apply: $postApplyStatus"
+
+            # if ($postApplyStatus -ne "false") {
+            #   echo "##[error]CRITICAL FAILURE: The first terraform apply did NOT disable the blue-endpoint. Azure still reports it as enabled. Aborting."
+            #   exit 1 # Fail the pipeline here
+            # }
+
+            # echo "Waiting 60 seconds for Azure to process the endpoint change..."
+            # Start-Sleep -Seconds 60
+            
+            # echo "--- DIAGNOSTIC: Planning the second stage ---"
+            # # Let's see what Terraform plans to do now that the endpoint is (supposedly) disabled.
+            # terraform plan -var="active_app_environment=$(inactiveEnvironment)" -input=false
+
+            # echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
+            # terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
+            
+            # echo "Traffic switch complete."
+          displayName: "Switch Traffic"
+
+        # - script: |
+        #     az login
+        #     az account show
+        #     az account get-access-token
+        #     echo "Authentication complete"
+        #   displayName: "Debug Azure CLI Authentication"
+        
+        # # Apply Traffic Update - No condition needed on the step itself
+        # - script: |
+        #     echo "Approval received. Switching traffic to $(inactiveEnvironment)..."
+        #     cd $(System.DefaultWorkingDirectory)/devops/terraform
+        #     terraform init -input=false
+        #     terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
+        #     terraform import azurerm_service_plan.blue_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/blue-service-plan
+        #     terraform import azurerm_service_plan.green_plan /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/serverFarms/green-service-plan
+        #     terraform import azurerm_linux_web_app.blue_app /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app
+        #     terraform import azurerm_linux_web_app.green_app /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/green-nestjs-cicd-app
+        #     terraform import azurerm_traffic_manager_external_endpoint.blue_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/blue-endpoint
+        #     terraform import azurerm_traffic_manager_external_endpoint.green_endpoint /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager/ExternalEndpoints/green-endpoint
+        #     terraform import azurerm_traffic_manager_profile.test_profile /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Network/trafficManagerProfiles/nestjs-cicd-traffic-manager
+        #     terraform import azurerm_app_service_custom_hostname_binding.blue_binding[0] /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg/providers/Microsoft.Web/sites/blue-nestjs-cicd-app/hostNameBindings/nestjs-cicd-traffic-manager.trafficmanager.net
+
+        #     echo "--- STAGE 1: Switching Traffic Manager Endpoints ONLY ---"
+        #     # Apply changes only to the Traffic Manager endpoints.
+        #     # This will disable the old endpoint, which unlocks the hostname binding.
+        #     terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)" `
+        #       -target=azurerm_traffic_manager_external_endpoint.blue_endpoint `
+        #       -target=azurerm_traffic_manager_external_endpoint.green_endpoint
+
+        #     # A pause is CRITICAL to let Azure's control plane process the change.
+        #     echo "Waiting 30 seconds for Azure to process endpoint changes..."
+        #     Start-Sleep -Seconds 30
+            
+        #     echo "--- STAGE 2: Applying all other changes (moving the hostname) ---"
+        #     # This second apply will now succeed because the lock is gone.
+        #     terraform apply -auto-approve -var="active_app_environment=$(inactiveEnvironment)"
+            
+        #     echo "Traffic switch complete."
+              
+        #     terraform apply -auto-approve tfplan
+        #   displayName: 'Apply Traffic Switch'
+
+    # Step 2b: Job to run ONLY IF REJECTED
+    - job: execute_rollback
+      displayName: 'Confirm Rollback'
+      dependsOn: approval_job
+      # This job-level condition IS VALID and runs when the approval is rejected
+      condition: failed('approval_job')
+      pool: 'SelfHostedPool' # Can be server or an agent pool
+      steps:
+        - script: |
+            echo "Approval was rejected. Rollback confirmed."
+            echo "Traffic remains on $(activeEnvironment)."
+          displayName: 'Log Rollback Confirmation'
+
+
+
+
+
+
+# Stage 3: Finalize Deployment or Confirm Rollback
+- stage: finalize_stage
+  displayName: 'Finalize Deployment or Confirm Rollback'
+  dependsOn: approval_stage
+  jobs:
+    - deployment: finalize_job
+      displayName: 'Sync Environments or Confirm Rollback'
+      environment: 'nest-cicd-prod'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              # Re-authentication to Azure before final Terraform execution
+              - task: AzureCLI@2
+                inputs:
+                  azureSubscription: 'AzureServicesConnection'  # Replace with your Azure Service Connection name
+                  scriptType: bash
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    echo "Re-authenticated to Azure CLI for Finalization"
+                displayName: 'Authenticate with Azure CLI for Finalization'
+              
+              - script: |
+                  echo "Finalizing deployment based on approval."
+                  if [ "$(approval.status)" = "approved" ]; then
+                    echo "Syncing inactive environment $(activeEnvironment) with new application version."
+                    terraform plan -var="active_app_environment=$(activeEnvironment)" -out=tfplan
+                    terraform apply -auto-approve tfplan
+                  else
+                    echo "Rollback confirmed. No additional changes to environments."
+                  fi
+                displayName: 'Finalize Sync or Rollback'
