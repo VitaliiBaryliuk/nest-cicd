@@ -60,7 +60,7 @@ stages:
       inputs:
         provider: 'azurerm'
         command: 'import'
-        commandOptions: 'azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
+        commandOptions: 'azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg'
 
     - task: TerraformTaskV4@4
       displayName: 'Terraform Apply'
