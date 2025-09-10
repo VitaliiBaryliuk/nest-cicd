@@ -11,7 +11,7 @@ variables:
   
   poolName: 'SelfHostedPool'
   environmentName: 'nest-cicd-prod'
-  nodeVersion: '20-lts'
+  nodeVersion: '20.x'
 
 stages:
 # STAGE 1: Build the NestJS Application and create an artifact
