@@ -100,14 +100,25 @@ stages:
         npm run build
       displayName: 'Install Dependencies and Build'
 
+    # Step 2: Create a clean packaging directory
+    - task: CopyFiles@2
+      displayName: 'Copy `dist` folder to packaging dir'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)/dist'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/publish/dist'
+
+    - task: CopyFiles@2
+      displayName: 'Copy `package.json` files to packaging dir'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)'
+        Contents: 'package*.json' # Copies both package.json and package-lock.json
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/publish'
+
+    # Step 3: Install ONLY production dependencies in the clean directory
     - script: |
-        mkdir $(Build.ArtifactStagingDirectory)/publish
-        cp -r dist $(Build.ArtifactStagingDirectory)/publish
-        cp package.json $(Build.ArtifactStagingDirectory)/publish
-        cp package-lock.json $(Build.ArtifactStagingDirectory)/publish
         cd $(Build.ArtifactStagingDirectory)/publish
-        npm install --production
-      displayName: 'Create Clean Production Package'
+        npm install --omit=dev --ignore-scripts
+      displayName: 'Install Production Dependencies'
 
     - task: ArchiveFiles@2
       displayName: 'Archive build output'
