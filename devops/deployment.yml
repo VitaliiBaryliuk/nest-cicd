@@ -206,4 +206,4 @@ stages:
               WebAppName: $(webAppName)
               ResourceGroupName: $(resourceGroupName)
               SourceSlot: $(stagingSlotName)
-              SwapWithProduction: true # This explicitly targets the production slot
+              SwapWithProduction: true

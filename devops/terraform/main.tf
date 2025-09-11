@@ -41,7 +41,7 @@ resource "azurerm_linux_web_app" "nestjs_cicd_app" {
   site_config {
     always_on = false
     application_stack {
-      node_version = var.web_app_service_node_version
+      node_version = "20-lts"
     }
   }
 
@@ -68,9 +68,6 @@ resource "azurerm_app_service_slot" "nestjs_cicd_app_slot" {
 
   site_config {
     always_on = false
-    application_stack {
-      node_version = var.web_app_service_node_version
-    }
   }
 
   app_settings = {
