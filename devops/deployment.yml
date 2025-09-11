@@ -151,22 +151,22 @@ stages:
               inlineScript: |
                 Write-Host "--- Forcefully setting App Service Configuration for Staging Slot ---"
 
-                # Define parameters in a hash table (splat)
+                # CRITICAL FIX: The keys in the hash table MUST match the az cli arguments.
+                # Use quotes around the keys.
                 $configParams = @{
-                  ResourceGroup = "$(resourceGroupName)"
-                  Name          = "$(webAppName)"
-                  Slot          = "$(stagingSlotName)"
-                  LinuxFxVersion = "NODE|$(nodeVersionLinux)"
-                  StartupFile   = "node dist/main.js"
+                  '--resource-group' = "$(resourceGroupName)"
+                  '--name'           = "$(webAppName)"
+                  '--slot'           = "$(stagingSlotName)"
+                  '--linux-fx-version' = "NODE|$(nodeVersionLinux)"
+                  '--startup-file'   = "node dist/main.js"
                 }
-                # Pass the parameters using @configParams
                 az webapp config set @configParams
 
                 $appSettingsParams = @{
-                  ResourceGroup = "$(resourceGroupName)"
-                  Name          = "$(webAppName)"
-                  Slot          = "$(stagingSlotName)"
-                  Settings      = "SCM_DO_BUILD_DURING_DEPLOYMENT=false"
+                  '--resource-group' = "$(resourceGroupName)"
+                  '--name'           = "$(webAppName)"
+                  '--slot'           = "$(stagingSlotName)"
+                  '--settings'       = "SCM_DO_BUILD_DURING_DEPLOYMENT=false"
                 }
                 az webapp config appsettings set @appSettingsParams
 
