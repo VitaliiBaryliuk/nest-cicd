@@ -81,7 +81,7 @@ stages:
       displayName: 'Install Node.js'
 
     - script: |
-        npm ci
+        npm ci --ignore-scripts
         npm run build
       displayName: 'Install Dependencies and Build'
 
