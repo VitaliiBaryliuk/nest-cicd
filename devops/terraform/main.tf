@@ -36,12 +36,11 @@ resource "azurerm_linux_web_app" "nestjs_cicd_app" {
   location            = var.azure_location
   resource_group_name = azurerm_resource_group.rg.name
   service_plan_id     = azurerm_service_plan.nestjs_cicd_app_plan.id
-
+  linux_fx_version  = "NODE|20"
   depends_on = [azurerm_service_plan.nestjs_cicd_app_plan]
 
   site_config {
     always_on = false
-    linux_fx_version  = "NODE|20"
     application_stack {
       node_version = var.web_app_service_node_version
     }
@@ -66,10 +65,10 @@ resource "azurerm_app_service_slot" "nestjs_cicd_app_slot" {
   location            = var.azure_location
   resource_group_name = azurerm_resource_group.rg.name
   app_service_plan_id = azurerm_service_plan.nestjs_cicd_app_plan.id
+  linux_fx_version  = "NODE|20"
 
   site_config {
     always_on = false
-    linux_fx_version  = "NODE|20"
   }
 
   app_settings = {
