@@ -181,6 +181,7 @@ stages:
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               deployToSlotOrASE: true
               SlotName: $(stagingSlotName)
+              ResourceGroupName: $(resourceGroupName)
 
 # STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
