@@ -17,6 +17,7 @@ variables:
   poolName: 'SelfHostedPool'
   environmentName: 'nest-cicd-prod'
   nodeVersion: '20.x'
+  nodeVersionLinux: '20-lts'
   terraformVersion: 'latest'
 
 stages:
@@ -145,9 +146,8 @@ stages:
               resourceGroupName: $(resourceGroupName)
               slotName: $(stagingSlotName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              runtimeStack: 'NODE|$(nodeVersion)'
-              startUpCommand: 'npm start' # Assumes 'start' script in your package.json runs the production server
-              appSettings: '-PORT 8080' # App Service injects the correct port, but sets it here for consistency.
+              runtimeStack: 'NODE|$(nodeVersionLinux)'
+              startUpCommand: 'node dist/main.js'
 
 # STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
