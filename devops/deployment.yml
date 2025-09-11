@@ -187,9 +187,6 @@ stages:
   displayName: 'Swap to Production'
   dependsOn: Deploy_to_Staging
   condition: succeeded()
-  environment: 
-    name: Production
-    resourceName: ProductionSlot
   jobs:
   - deployment: SwapProduction
     displayName: 'Swap Staging with Production'
