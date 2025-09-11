@@ -146,7 +146,7 @@ stages:
             displayName: 'Configure Staging Slot for Node.js Run-From-Package'
             inputs:
               azureSubscription: $(azureSubscription)
-              scriptType: 'bash'
+              scriptType: 'ps'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 echo "--- Forcefully setting App Service Configuration for Staging Slot ---"
