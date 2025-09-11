@@ -154,7 +154,7 @@ stages:
                 # Run the commands as single, unbroken lines to avoid any parsing errors.
                 
                 Write-Host "Setting runtime and startup command..."
-                az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|$(nodeVersionLinux)" --startup-file "node dist/main.js" --health-check-path ""
+                az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|$(nodeVersionLinux)" --startup-file "node dist/main.js"
 
                 Write-Host "Disabling Oryx build..."
                 az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
@@ -163,15 +163,24 @@ stages:
           # TASK 2: DEPLOY THE PRE-BUILT PACKAGE
           # This task now only has one job: upload the code.
           # =================================================================
+          # - task: AzureWebApp@1
+          #   displayName: 'Deploy NestJS App to Staging Slot'
+          #   inputs:
+          #     azureSubscription: $(azureSubscription)
+          #     appType: 'webAppLinux'
+          #     appName: $(webAppName)
+          #     resourceGroupName: $(resourceGroupName)
+          #     slotName: $(stagingSlotName)
+          #     package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             displayName: 'Deploy NestJS App to Staging Slot'
             inputs:
               azureSubscription: $(azureSubscription)
               appType: 'webAppLinux'
-              appName: $(webAppName)
-              resourceGroupName: $(resourceGroupName)
-              slotName: $(stagingSlotName)
+              WebAppName: $(webAppName)
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              deployToSlotOrASE: true
+              SlotName: $(stagingSlotName)
 
 # STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
