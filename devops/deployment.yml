@@ -80,18 +80,12 @@ stages:
         versionSpec: $(nodeVersion)
       displayName: 'Install Node.js'
 
-    - script: |
-        echo "--- Installing dependencies without running lifecycle scripts ---"
-        npm ci --ignore-scripts
+    - script: npm ci --ignore-scripts
+      displayName: 'Install Dependencies (npm ci)'
 
-        echo "--- Starting the build process ---"
-        npm run build
-        
-        echo "--- Build finished. Listing contents of the directory to verify 'dist' folder: ---"
-        dir
-      displayName: 'Install Dependencies and Build'
+    - script: npm run build
+      displayName: 'Build the Application (npm run build)'
 
-    # Step 2: Create a clean packaging directory
     - task: CopyFiles@2
       displayName: 'Copy `dist` folder to packaging dir'
       inputs:
