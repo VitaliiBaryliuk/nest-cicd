@@ -81,7 +81,7 @@ stages:
       displayName: 'Install Node.js'
 
     - script: |
-        npm install
+        npm ci
         npm run build
       displayName: 'Install Dependencies and Build'
 
@@ -96,7 +96,7 @@ stages:
       displayName: 'Copy `package.json` files to packaging dir'
       inputs:
         SourceFolder: '$(System.DefaultWorkingDirectory)'
-        Contents: 'package*.json' # Copies both package.json and package-lock.json
+        Contents: 'package*.json'
         TargetFolder: '$(Build.ArtifactStagingDirectory)/publish'
 
     # Step 3: Install ONLY production dependencies in the clean directory
