@@ -148,6 +148,7 @@ stages:
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               runtimeStack: 'NODE|$(nodeVersionLinux)'
               startUpCommand: 'node dist/main.js'
+              appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT false'
 
 # STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
