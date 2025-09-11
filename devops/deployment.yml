@@ -155,6 +155,8 @@ stages:
               appName: $(webAppName)
               resourceGroupName: $(resourceGroupName)
               slotName: $(stagingSlotName)
+              runtimeStack: 'NODE|20-lts'
+              startUpCommand: 'node dist/main.js'
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
 
           # - task: AzureRmWebAppDeployment@4
