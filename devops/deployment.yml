@@ -154,10 +154,10 @@ stages:
                 # Run the commands as single, unbroken lines to avoid any parsing errors.
                 
                 Write-Host "Setting runtime and startup command..."
-                az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|$(nodeVersionLinux)" --startup-file "node dist/main.js"
+                az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|$(nodeVersionLinux)" --startup-file "node dist/main.js" --health-check-path ""
 
                 Write-Host "Disabling Oryx build..."
-                az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false --health-check-path ""
+                az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
 
           # =================================================================
           # TASK 2: DEPLOY THE PRE-BUILT PACKAGE
