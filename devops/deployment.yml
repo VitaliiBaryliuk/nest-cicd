@@ -137,54 +137,36 @@ stages:
       runOnce:
         deploy:
           steps:
-          - task: AzureCLI@2
-            displayName: 'Set Runtime and Deploy Node.js App to Staging Slot'
-            inputs:
-              azureSubscription: $(azureSubscription)
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                echo "Setting runtime and startup file for the staging slot..."
-                az webapp config set \
-                  --resource-group $(resourceGroupName) \
-                  --name $(webAppName) \
-                  --slot $(stagingSlotName) \
-                  --linux-fx-version "NODE|$(nodeVersionLinux)" \
-                  --startup-file "node dist/main.js"
-
-                echo "Disabling Oryx build..."
-                az webapp config appsettings set \
-                  --resource-group $(resourceGroupName) \
-                  --name $(webAppName) \
-                  --slot $(stagingSlotName) \
-                  --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
-
-                echo "Deploying package to staging slot..."
-                az webapp deployment source config-zip \
-                  --resource-group $(resourceGroupName) \
-                  --name $(webAppName) \
-                  --slot $(stagingSlotName) \
-                  --src $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
-
-          # =================================================================
-          # TASK 1: EXPLICITLY CONFIGURE THE STAGING SLOT
-          # This runs BEFORE the deployment starts.
-          # =================================================================
           # - task: AzureCLI@2
-          #   displayName: 'Configure Staging Slot for Node.js Run-From-Package'
+          #   displayName: 'Set Runtime and Deploy Node.js App to Staging Slot'
           #   inputs:
           #     azureSubscription: $(azureSubscription)
-          #     scriptType: 'ps'
+          #     scriptType: 'bash'
           #     scriptLocation: 'inlineScript'
           #     inlineScript: |
-          #       Write-Host "--- Forcefully setting App Service Configuration for Staging Slot ---"
-          #       Write-Host "Setting runtime and startup command..."
-          #       az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|$(nodeVersionLinux)" --startup-file "node dist/main.js"
-          #       az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
-          # =================================================================
-          # TASK 2: DEPLOY THE PRE-BUILT PACKAGE
-          # This task now only has one job: upload the code.
-          # =================================================================
+          #       echo "Setting runtime and startup file for the staging slot..."
+          #       az webapp config set \
+          #         --resource-group $(resourceGroupName) \
+          #         --name $(webAppName) \
+          #         --slot $(stagingSlotName) \
+          #         --linux-fx-version "NODE|$(nodeVersionLinux)" \
+          #         --startup-file "node dist/main.js"
+
+          #       echo "Disabling Oryx build..."
+          #       az webapp config appsettings set \
+          #         --resource-group $(resourceGroupName) \
+          #         --name $(webAppName) \
+          #         --slot $(stagingSlotName) \
+          #         --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+
+          #       echo "Deploying package to staging slot..."
+          #       az webapp deployment source config-zip \
+          #         --resource-group $(resourceGroupName) \
+          #         --name $(webAppName) \
+          #         --slot $(stagingSlotName) \
+          #         --src $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+
+
           # - task: AzureWebApp@1
           #   displayName: 'Deploy NestJS App to Staging Slot'
           #   inputs:
@@ -194,16 +176,27 @@ stages:
           #     resourceGroupName: $(resourceGroupName)
           #     slotName: $(stagingSlotName)
           #     package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-          # - task: AzureRmWebAppDeployment@4
-          #   displayName: 'Deploy NestJS App to Staging Slot'
-          #   inputs:
-          #     azureSubscription: $(azureSubscription)
-          #     appType: 'webAppLinux'
-          #     WebAppName: $(webAppName)
-          #     package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-          #     deployToSlotOrASE: true
-          #     SlotName: $(stagingSlotName)
-          #     ResourceGroupName: $(resourceGroupName)
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Deploy NestJS App to Staging Slot'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: 'webAppLinux'
+              WebAppName: $(webAppName)
+              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              deployToSlotOrASE: true
+              SlotName: $(stagingSlotName)
+              ResourceGroupName: $(resourceGroupName)
+          - task: AzureCLI@2
+            displayName: 'Configure Staging Slot for Node.js Run-From-Package'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              scriptType: 'ps'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                Write-Host "--- Forcefully setting App Service Configuration for Staging Slot ---"
+                Write-Host "Setting runtime and startup command..."
+                az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|$(nodeVersionLinux)" --startup-file "node dist/main.js"
+                az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false              
 
 # STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
