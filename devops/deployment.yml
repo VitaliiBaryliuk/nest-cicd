@@ -156,7 +156,7 @@ stages:
                   ResourceGroup = "$(resourceGroupName)"
                   Name          = "$(webAppName)"
                   Slot          = "$(stagingSlotName)"
-                  LinuxFxVersion = "NODE|$(azureNodeVersion)"
+                  LinuxFxVersion = "NODE|$(nodeVersionLinux)"
                   StartupFile   = "node dist/main.js"
                 }
                 # Pass the parameters using @configParams
