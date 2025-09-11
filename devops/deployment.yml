@@ -137,36 +137,36 @@ stages:
       runOnce:
         deploy:
           steps:
-          - task: AzureCLI@2
-            displayName: 'Deploy NestJS App and Configure Staging Slot'
-            inputs:
-              azureSubscription: $(azureSubscription)
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                echo "Configuring runtime and startup file explicitly..."
-                az webapp config set \
-                  --resource-group $(resourceGroupName) \
-                  --name $(webAppName) \
-                  --slot $(stagingSlotName) \
-                  --linux-fx-version "NODE|$(nodeVersionLinux)" \
-                  --startup-file "node dist/main.js"
+          # - task: AzureCLI@2
+          #   displayName: 'Deploy NestJS App and Configure Staging Slot'
+          #   inputs:
+          #     azureSubscription: $(azureSubscription)
+          #     scriptType: bash
+          #     scriptLocation: inlineScript
+          #     inlineScript: |
+          #       echo "Configuring runtime and startup file explicitly..."
+          #       az webapp config set \
+          #         --resource-group $(resourceGroupName) \
+          #         --name $(webAppName) \
+          #         --slot $(stagingSlotName) \
+          #         --linux-fx-version "NODE|$(nodeVersionLinux)" \
+          #         --startup-file "node dist/main.js"
 
-                # 2. Disable Oryx during deployment
-                echo "Disabling Oryx..."
-                az webapp config appsettings set \
-                  --resource-group $(resourceGroupName) \
-                  --name $(webAppName) \
-                  --slot $(stagingSlotName) \
-                  --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+          #       # 2. Disable Oryx during deployment
+          #       echo "Disabling Oryx..."
+          #       az webapp config appsettings set \
+          #         --resource-group $(resourceGroupName) \
+          #         --name $(webAppName) \
+          #         --slot $(stagingSlotName) \
+          #         --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
                 
-                # 3. Deploy the ZIP package
-                echo "Deploying ZIP artifact to slot..."
-                az webapp deployment source config-zip \
-                  --resource-group $(resourceGroupName) \
-                  --name $(webAppName) \
-                  --slot $(stagingSlotName) \
-                  --src "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip"
+          #       # 3. Deploy the ZIP package
+          #       echo "Deploying ZIP artifact to slot..."
+          #       az webapp deployment source config-zip \
+          #         --resource-group $(resourceGroupName) \
+          #         --name $(webAppName) \
+          #         --slot $(stagingSlotName) \
+          #         --src "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip"
 
 
           # - task: AzureWebApp@1
@@ -178,16 +178,17 @@ stages:
           #     resourceGroupName: $(resourceGroupName)
           #     slotName: $(stagingSlotName)
           #     package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-          # - task: AzureRmWebAppDeployment@4
-          #   displayName: 'Deploy NestJS App to Staging Slot'
-          #   inputs:
-          #     azureSubscription: $(azureSubscription)
-          #     appType: 'webAppLinux'
-          #     WebAppName: $(webAppName)
-          #     package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-          #     deployToSlotOrASE: true
-          #     SlotName: $(stagingSlotName)
-          #     ResourceGroupName: $(resourceGroupName)
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: 'Deploy NestJS App to Staging Slot'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: 'webAppLinux'
+              WebAppName: $(webAppName)
+              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              deployToSlotOrASE: true
+              SlotName: $(stagingSlotName)
+              ResourceGroupName: $(resourceGroupName)
 
           # - task: AzureCLI@2
           #   displayName: 'Configure Staging Slot for Node.js Run-From-Package'

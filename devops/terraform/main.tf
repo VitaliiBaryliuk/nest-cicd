@@ -54,7 +54,7 @@ resource "azurerm_linux_web_app" "nestjs_cicd_app" {
 
   app_settings = {
     "PORT": "3000"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "false"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
   }
 }
 
@@ -72,6 +72,6 @@ resource "azurerm_app_service_slot" "nestjs_cicd_app_slot" {
 
   app_settings = {
     "PORT": "3000"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "false"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
   }
 }
