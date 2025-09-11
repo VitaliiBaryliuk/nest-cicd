@@ -157,7 +157,7 @@ stages:
                 az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|$(nodeVersionLinux)" --startup-file "node dist/main.js"
 
                 Write-Host "Disabling Oryx build..."
-                az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+                az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false --health-check-path ""
 
           # =================================================================
           # TASK 2: DEPLOY THE PRE-BUILT PACKAGE
