@@ -137,15 +137,15 @@ stages:
       runOnce:
         deploy:
           steps:
-          - task: AzureCLI@2
-            displayName: 'Configure Staging Slot for Node.js Run-From-Package'
-            inputs:
-              azureSubscription: $(azureSubscription)
-              scriptType: 'ps'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|20-lts" --startup-file "node dist/main.js" 
-                # az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|20-lts" --startup-file "node dist/main.js"
+          # - task: AzureCLI@2
+          #   displayName: 'Configure Staging Slot for Node.js Run-From-Package'
+          #   inputs:
+          #     azureSubscription: $(azureSubscription)
+          #     scriptType: 'ps'
+          #     scriptLocation: 'inlineScript'
+          #     inlineScript: |
+          #       az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|20-lts" --startup-file "node dist/main.js" 
+          #       # az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|20-lts" --startup-file "node dist/main.js"
 
           - task: AzureWebApp@1
             displayName: 'Deploy NestJS App to Staging Slot'
@@ -187,6 +187,9 @@ stages:
   displayName: 'Swap to Production'
   dependsOn: Deploy_to_Staging
   condition: succeeded()
+  environment: 
+    name: Production
+    resourceName: ProductionSlot
   jobs:
   - deployment: SwapProduction
     displayName: 'Swap Staging with Production'
