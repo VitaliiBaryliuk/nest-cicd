@@ -142,57 +142,47 @@ stages:
           # TASK 1: EXPLICITLY CONFIGURE THE STAGING SLOT
           # This runs BEFORE the deployment starts.
           # =================================================================
-          # - task: AzureCLI@2
-          #   displayName: 'Configure Staging Slot for Node.js Run-From-Package'
-          #   inputs:
-          #     azureSubscription: $(azureSubscription)
-          #     scriptType: 'ps'
-          #     scriptLocation: 'inlineScript'
-          #     inlineScript: |
-          #       echo "--- Forcefully setting App Service Configuration for Staging Slot ---"
-                
-          #       # Set the runtime stack AND the startup command
-          #       az webapp config set \
-          #         --resource-group $(resourceGroupName) \
-          #         --name $(webAppName) \
-          #         --slot $(stagingSlotName) \
-          #         --linux-fx-version "NODE|$(azureNodeVersion)" \
-          #         --startup-file "node dist/main.js"
-
-          #       # Set the application settings to disable the build
-          #       az webapp config appsettings set \
-          #         --resource-group $(resourceGroupName) \
-          #         --name $(webAppName) \
-          #         --slot $(stagingSlotName) \
-          #         --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
-
-          # # =================================================================
-          # # TASK 2: DEPLOY THE PRE-BUILT PACKAGE
-          # # This task now only has one job: upload the code.
-          # # =================================================================
-          # - task: AzureWebApp@1
-          #   displayName: 'Deploy NestJS App to Staging Slot'
-          #   inputs:
-          #     azureSubscription: $(azureSubscription)
-          #     appType: 'webAppLinux'
-          #     appName: $(webAppName)
-          #     resourceGroupName: $(resourceGroupName)
-          #     slotName: $(stagingSlotName)
-          #     package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-
-          - task: AzureRmWebAppDeployment@4
-            displayName: 'Deploy Application to $(inactiveEnvironment)'
+          - task: AzureCLI@2
+            displayName: 'Configure Staging Slot for Node.js Run-From-Package'
             inputs:
               azureSubscription: $(azureSubscription)
-              # Specify 'webAppLinux' for your Linux App Service
+              scriptType: 'ps'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                Write-Host "--- Forcefully setting App Service Configuration for Staging Slot ---"
+
+                # Define parameters in a hash table (splat)
+                $configParams = @{
+                  ResourceGroup = "$(resourceGroupName)"
+                  Name          = "$(webAppName)"
+                  Slot          = "$(stagingSlotName)"
+                  LinuxFxVersion = "NODE|$(azureNodeVersion)"
+                  StartupFile   = "node dist/main.js"
+                }
+                # Pass the parameters using @configParams
+                az webapp config set @configParams
+
+                $appSettingsParams = @{
+                  ResourceGroup = "$(resourceGroupName)"
+                  Name          = "$(webAppName)"
+                  Slot          = "$(stagingSlotName)"
+                  Settings      = "SCM_DO_BUILD_DURING_DEPLOYMENT=false"
+                }
+                az webapp config appsettings set @appSettingsParams
+
+          # =================================================================
+          # TASK 2: DEPLOY THE PRE-BUILT PACKAGE
+          # This task now only has one job: upload the code.
+          # =================================================================
+          - task: AzureWebApp@1
+            displayName: 'Deploy NestJS App to Staging Slot'
+            inputs:
+              azureSubscription: $(azureSubscription)
               appType: 'webAppLinux'
-              # Ensure the name matches your Terraform resource exactly
-              WebAppName: $(webAppName)
-              # Point to the zip file created by the ArchiveFiles task
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+              appName: $(webAppName)
+              resourceGroupName: $(resourceGroupName)
               slotName: $(stagingSlotName)
-              # Use 'zipDeploy' as the method, which works best with the App Service platform
-              deploymentMethod: 'zipDeploy'               
+              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
 
 # STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
