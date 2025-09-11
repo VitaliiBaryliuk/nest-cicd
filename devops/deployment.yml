@@ -163,7 +163,7 @@ stages:
           # TASK 2: DEPLOY THE PRE-BUILT PACKAGE
           # This task now only has one job: upload the code.
           # =================================================================
-          - task: AzureWebApp@1
+          - task: AzureRmWebAppDeployment@4
             displayName: 'Deploy NestJS App to Staging Slot'
             inputs:
               azureSubscription: $(azureSubscription)

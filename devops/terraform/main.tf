@@ -41,9 +41,9 @@ resource "azurerm_linux_web_app" "nestjs_cicd_app" {
 
   site_config {
     always_on = false
+    linux_fx_version  = "NODE|20"
     application_stack {
       node_version = var.web_app_service_node_version
-      php_version  = null
     }
   }
 
@@ -56,7 +56,7 @@ resource "azurerm_linux_web_app" "nestjs_cicd_app" {
 
   app_settings = {
     "PORT": "3000"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "false"
   }
 }
 
@@ -69,11 +69,11 @@ resource "azurerm_app_service_slot" "nestjs_cicd_app_slot" {
 
   site_config {
     always_on = false
-    php_version  = null
+    linux_fx_version  = "NODE|20"
   }
 
   app_settings = {
     "PORT": "3000"
-    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "false"
   }
 }
