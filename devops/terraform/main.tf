@@ -5,6 +5,13 @@ terraform {
       version = ">=3.77.0"
     }
   }
+
+  backend "azurerm" {
+    resource_group_name  = "TerraformStateRG"
+    storage_account_name = "tfstatea9e1466d"
+    container_name       = "tfstate"
+    key                  = "nestjs-prod.terraform.tfstate"
+  }
 }
 
 provider "azurerm" {

@@ -55,18 +55,6 @@ stages:
         provider: 'azurerm'
         command: 'validate'
 
-    - script: |
-        cd %SYSTEM_DEFAULTWORKINGDIRECTORY%\devops\terraform
-        az login
-        az account show
-        az account get-access-token
-        terraform init
-        terraform import azurerm_resource_group.rg /subscriptions/703d10f6-9dab-4401-ac0f-cade6c18279e/resourceGroups/nestjs-cicd-prod-rg
-        terraform apply -auto-approve tfplan
-      env:
-        ARM_SUBSCRIPTION_ID: $(azureSubscription)
-      displayName: 'Terraform Resources Imports'        
-
     - task: TerraformTaskV4@4
       displayName: 'Terraform Apply'
       inputs:
