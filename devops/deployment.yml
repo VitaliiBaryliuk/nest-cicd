@@ -81,8 +81,14 @@ stages:
       displayName: 'Install Node.js'
 
     - script: |
+        echo "--- Installing dependencies without running lifecycle scripts ---"
         npm ci --ignore-scripts
+
+        echo "--- Starting the build process ---"
         npm run build
+        
+        echo "--- Build finished. Listing contents of the directory to verify 'dist' folder: ---"
+        dir
       displayName: 'Install Dependencies and Build'
 
     # Step 2: Create a clean packaging directory
