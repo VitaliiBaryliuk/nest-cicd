@@ -155,7 +155,7 @@ stages:
               appName: $(webAppName)
               resourceGroupName: $(resourceGroupName)
               slotName: $(stagingSlotName)
-              runtimeStack: 'NODE|20-lts'
+              runtimeStack: 'NODE|20.19.3'
               startUpCommand: 'node dist/main.js'
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
 
