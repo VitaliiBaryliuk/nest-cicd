@@ -17,7 +17,6 @@ variables:
   poolName: 'SelfHostedPool'
   environmentName: 'nest-cicd-prod'
   nodeVersion: '20.x'
-  nodeVersionLinux: '20-lts'
   terraformVersion: 'latest'
 
 stages:
@@ -155,7 +154,7 @@ stages:
               appName: $(webAppName)
               resourceGroupName: $(resourceGroupName)
               slotName: $(stagingSlotName)
-              runtimeStack: 'NODE|20.19.3'
+              runtimeStack: 'NODE|$(nodeVersion)'
               startUpCommand: 'node dist/main.js'
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
 
@@ -197,6 +196,13 @@ stages:
       runOnce:
         deploy:
           steps:
+          - task: ManualValidation@0
+            displayName: 'Wait for Manual Approval'
+            inputs:
+              instructions: 'Review the deployment to Staging. Approve to swap Staging to Production.'
+              onTimeout: 'reject'
+              timeoutInMinutes: 1440
+
           - task: AzureAppServiceManage@0
             displayName: 'Swap Staging to Production'
             inputs:
