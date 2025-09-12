@@ -22,7 +22,7 @@
     "release": "standard-version"
   },
   "engines": {
-    "node": "20.19.3"
+    "node": ">=20.0.0 <21.0.0"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
