@@ -21,9 +21,6 @@
     "prepare": "husky install",
     "release": "standard-version"
   },
-  "engines": {
-    "node": "20-lts"
-  },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
