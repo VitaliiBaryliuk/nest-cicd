@@ -131,56 +131,19 @@ stages:
     displayName: 'Deploy to Staging'
     pool:
       name: $(poolName)
-    environment: $(environmentName)
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          # - task: AzureCLI@2
-          #   displayName: 'Configure Staging Slot for Node.js Run-From-Package'
-          #   inputs:
-          #     azureSubscription: $(azureSubscription)
-          #     scriptType: 'ps'
-          #     scriptLocation: 'inlineScript'
-          #     inlineScript: |
-          #       az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|20.x" --startup-file "node dist/main.js" 
-          #       az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|20.x" --startup-file "node dist/main.js"
-
-          - task: AzureWebApp@1
-            displayName: 'Deploy NestJS App to Staging Slot'
-            inputs:
-              azureSubscription: $(azureSubscription)
-              appType: 'webAppLinux'
-              appName: $(webAppName)
-              resourceGroupName: $(resourceGroupName)
-              slotName: $(stagingSlotName)
-              runtimeStack: 'NODE|$(nodeVersion)'
-              startUpCommand: 'node dist/main.js'
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT false'
-
-          # - task: AzureRmWebAppDeployment@4
-          #   displayName: 'Deploy NestJS App to Staging Slot'
-          #   inputs:
-          #     azureSubscription: $(azureSubscription)
-          #     appType: 'webAppLinux'
-          #     WebAppName: $(webAppName)
-          #     package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-          #     deployToSlotOrASE: true
-          #     SlotName: $(stagingSlotName)
-          #     ResourceGroupName: $(resourceGroupName)
-
-          # - task: AzureCLI@2
-          #   displayName: 'Configure Staging Slot for Node.js Run-From-Package'
-          #   inputs:
-          #     azureSubscription: $(azureSubscription)
-          #     scriptType: 'ps'
-          #     scriptLocation: 'inlineScript'
-          #     inlineScript: |
-          #       Write-Host "--- Forcefully setting App Service Configuration for Staging Slot ---"
-          #       Write-Host "Setting runtime and startup command..."
-          #       az webapp config set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --linux-fx-version "NODE|$(nodeVersionLinux)" --startup-file "node dist/main.js"
-          #       az webapp config appsettings set --resource-group $(resourceGroupName) --name $(webAppName) --slot $(stagingSlotName) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false              
+    steps:
+    - task: AzureWebApp@1
+      displayName: 'Deploy NestJS App to Staging Slot'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        appType: 'webAppLinux'
+        appName: $(webAppName)
+        resourceGroupName: $(resourceGroupName)
+        slotName: $(stagingSlotName)
+        runtimeStack: 'NODE|$(nodeVersion)'
+        startUpCommand: 'node dist/main.js'
+        package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+        appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT false'
 
 # STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
