@@ -137,9 +137,6 @@ stages:
       inputs:
         artifactName: 'drop'
 
-    - script: dir "$(Pipeline.Workspace)"
-      displayName: 'List downloaded files'
-
     - task: AzureWebApp@1
       displayName: 'Deploy NestJS App to Staging Slot'
       inputs:
@@ -150,7 +147,7 @@ stages:
         slotName: $(stagingSlotName)
         runtimeStack: 'NODE|$(nodeVersion)'
         startUpCommand: 'node dist/main.js'
-        package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+        package: '$(Pipeline.Workspace)/$(Build.BuildId).zip'
         appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT false'
 
 # - stage: Deploy_to_Staging
