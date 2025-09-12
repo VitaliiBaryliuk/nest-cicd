@@ -127,7 +127,7 @@ stages:
   dependsOn: Build
   condition: succeeded()
   jobs:
-  - deployment: DeployStaging
+  - job: DeployStaging
     displayName: 'Deploy to Staging'
     pool:
       name: $(poolName)
