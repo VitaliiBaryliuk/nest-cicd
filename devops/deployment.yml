@@ -136,6 +136,10 @@ stages:
       displayName: 'Download Build Artifact'
       inputs:
         artifactName: 'drop'
+
+    - script: dir "$(Pipeline.Workspace)"
+      displayName: 'List downloaded files'
+
     - task: AzureWebApp@1
       displayName: 'Deploy NestJS App to Staging Slot'
       inputs:
