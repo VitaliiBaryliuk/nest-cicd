@@ -150,33 +150,6 @@ stages:
         package: '$(Pipeline.Workspace)/$(Build.BuildId).zip'
         appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT false'
 
-# - stage: Deploy_to_Staging
-#   displayName: 'Deploy to Staging Slot'
-#   dependsOn: Build
-#   condition: succeeded()
-#   jobs:
-#   - deployment: DeployStaging
-#     displayName: 'Deploy to Staging'
-#     pool:
-#       name: $(poolName)
-#     environment: $(environmentName)
-#     strategy:
-#       runOnce:
-#         deploy:
-#           steps:
-#           - task: AzureWebApp@1
-#             displayName: 'Deploy NestJS App to Staging Slot'
-#             inputs:
-#               azureSubscription: $(azureSubscription)
-#               appType: 'webAppLinux'
-#               appName: $(webAppName)
-#               resourceGroupName: $(resourceGroupName)
-#               slotName: $(stagingSlotName)
-#               runtimeStack: 'NODE|$(nodeVersion)'
-#               startUpCommand: 'node dist/main.js'
-#               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-#               appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT false'
-
 # STAGE 4: Swap Staging (Green) with Production (Blue)
 - stage: Swap_to_Production
   displayName: 'Swap to Production'
@@ -192,13 +165,6 @@ stages:
       runOnce:
         deploy:
           steps:
-          # - task: ManualValidation@0
-          #   displayName: 'Wait for Manual Approval'
-          #   inputs:
-          #     instructions: 'Review the deployment to Staging. Approve to swap Staging to Production.'
-          #     onTimeout: 'reject'
-          #     timeoutInMinutes: 1440
-
           - task: AzureAppServiceManage@0
             displayName: 'Swap Staging to Production'
             inputs:
