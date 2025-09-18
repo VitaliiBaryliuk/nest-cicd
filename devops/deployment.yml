@@ -29,26 +29,23 @@ stages:
     pool:
       name: $(poolName)
     steps:
-    # This task installs the specified version of Terraform on the agent
     - task: TerraformInstaller@1
       displayName: 'Install Terraform'
       inputs:
         terraformVersion: $(terraformVersion)
 
-    # Initialize Terraform. This connects to the remote backend.
     - task: TerraformTaskV4@4
       displayName: 'Terraform Init'
       inputs:
         provider: 'azurerm'
         command: 'init'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/devops/terraform' # Assumes .tf files are in root
+        workingDirectory: '$(System.DefaultWorkingDirectory)/devops/terraform'
         backendServiceArm: $(azureSubscription)
         backendAzureRmResourceGroupName: $(terraformStateRG)
         backendAzureRmStorageAccountName: $(terraformStateStorage)
         backendAzureRmContainerName: $(terraformStateContainer)
         backendAzureRmKey: $(terraformStateFile)
 
-    # Optional but recommended: Validate the Terraform files
     - task: TerraformTaskV4@4
       displayName: 'Terraform Validate'
       inputs:
