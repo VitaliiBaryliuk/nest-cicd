@@ -9,4 +9,8 @@ export class AppService {
   getHola(): string {
     return 'Hola World!';
   }
+
+  getHealth(): any {
+    return { status: 'OK' };
+  }
 }
