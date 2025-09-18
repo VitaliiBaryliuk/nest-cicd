@@ -1,8 +1,5 @@
 name: 'nestjs-blue-green-cicd'
 
-trigger:
-- main
-
 variables:
   azureSubscription: 'AzureServicesConnection'
   resourceGroupName: 'nestjs-cicd-prod-rg'
