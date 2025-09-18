@@ -1,0 +1,173 @@
+name: 'nestjs-blue-green-cicd'
+
+trigger:
+- main
+
+variables:
+  azureSubscription: 'AzureServicesConnection'
+  resourceGroupName: 'nestjs-cicd-prod-rg'
+  webAppName: 'nestjs-cicd-app'
+  stagingSlotName: 'nestjs-cicd-app-slot'
+
+  terraformStateRG: 'TerraformStateRG'
+  terraformStateStorage: 'tfstatea9e1466d'
+  terraformStateContainer: 'tfstate'
+  terraformStateFile: 'nestjs-prod.terraform.tfstate'
+  
+  poolName: 'SelfHostedPool'
+  environmentName: 'nest-cicd-prod'
+  nodeVersion: '20.x'
+  terraformVersion: 'latest'
+
+stages:
+# STAGE 1: PROVISION INFRASTRUCTURE WITH TERRAFORM
+- stage: Provision_Infrastructure
+  displayName: 'Provision Infrastructure'
+  jobs:
+  - job: Terraform_Apply
+    displayName: 'Terraform Apply'
+    pool:
+      name: $(poolName)
+    steps:
+    - task: TerraformInstaller@1
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: $(terraformVersion)
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Init'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/devops/terraform'
+        backendServiceArm: $(azureSubscription)
+        backendAzureRmResourceGroupName: $(terraformStateRG)
+        backendAzureRmStorageAccountName: $(terraformStateStorage)
+        backendAzureRmContainerName: $(terraformStateContainer)
+        backendAzureRmKey: $(terraformStateFile)
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Validate'
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Apply'
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/devops/terraform'
+        commandOptions: '-auto-approve'
+        environmentServiceNameAzureRM: $(azureSubscription)
+
+# STAGE 2: Build the NestJS Application and create an artifact
+- stage: Build
+  displayName: 'Build NestJS App'
+  dependsOn: Provision_Infrastructure
+  condition: succeeded()
+  jobs:
+  - job: BuildJob
+    displayName: 'Build and Archive'
+    pool:
+      name: $(poolName)
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(nodeVersion)
+      displayName: 'Install Node.js'
+
+    - script: npm ci --ignore-scripts
+      displayName: 'Install Dependencies (npm ci)'
+
+    - script: npm run build
+      displayName: 'Build the Application (npm run build)'
+
+    - task: CopyFiles@2
+      displayName: 'Copy `dist` folder to packaging dir'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)/dist'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/publish/dist'
+
+    - task: CopyFiles@2
+      displayName: 'Copy `package.json` files to packaging dir'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)'
+        Contents: 'package*.json'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)/publish'
+
+    # Step 3: Install ONLY production dependencies in the clean directory
+    - script: |
+        cd $(Build.ArtifactStagingDirectory)/publish
+        npm install --omit=dev --ignore-scripts
+      displayName: 'Install Production Dependencies'
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive build output'
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+# STAGE 3: Deploy the artifact to the Staging (Green) Slot
+- stage: Deploy_to_Staging
+  displayName: 'Deploy to Staging Slot'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: DeployStaging
+    displayName: 'Deploy to Staging'
+    pool:
+      name: $(poolName)
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Build Artifact'
+      inputs:
+        artifactName: 'drop'
+
+    - task: AzureWebApp@1
+      displayName: 'Deploy NestJS App to Staging Slot'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        appType: 'webAppLinux'
+        appName: $(webAppName)
+        resourceGroupName: $(resourceGroupName)
+        slotName: $(stagingSlotName)
+        runtimeStack: 'NODE|$(nodeVersion)'
+        startUpCommand: 'node dist/main.js'
+        package: '$(Pipeline.Workspace)/$(Build.BuildId).zip'
+        appSettings: '-SCM_DO_BUILD_DURING_DEPLOYMENT false'
+
+# STAGE 4: Swap Staging (Green) with Production (Blue)
+- stage: Swap_to_Production
+  displayName: 'Swap to Production'
+  dependsOn: Deploy_to_Staging
+  condition: succeeded()
+  jobs:
+  - deployment: SwapProduction
+    displayName: 'Swap Staging with Production'
+    pool:
+      name: $(poolName)
+    environment: $(environmentName)
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureAppServiceManage@0
+            displayName: 'Swap Staging to Production'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              Action: 'Swap Slots'
+              WebAppName: $(webAppName)
+              ResourceGroupName: $(resourceGroupName)
+              SourceSlot: $(stagingSlotName)
+              SwapWithProduction: true

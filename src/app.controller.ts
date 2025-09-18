@@ -14,4 +14,9 @@ export class AppController {
   getHola(): string {
     return this.appService.getHola();
   }
+
+  @Get('health')
+  check() {
+    return { status: 'OK' };
+  }
 }
