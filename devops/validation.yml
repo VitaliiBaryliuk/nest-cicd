@@ -1,21 +1,13 @@
 name: 'Validate nestjs-cicd'
 
-trigger:
-  branches:
-    include:
-      - feat/*
-    exclude:
-      - main
-      - develop
-
 pr:
   autoCancel: true
   branches:
     include:
-      - 'develop'
-  paths:
+      - develop
+      - feat/*
     exclude:
-      - README.md   
+      - main
 
 stages:
 - stage: dev_stage_validate
