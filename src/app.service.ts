@@ -10,7 +10,7 @@ export class AppService {
     return 'Hola World!';
   }
 
-  getHealth(): any {
+  getHealth(): { status: 'OK' } {
     return { status: 'OK' };
   }
 }
